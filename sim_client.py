@@ -1,51 +1,45 @@
 import asyncio
-from asyncio import Event
+from threading import Event, Thread
 import base64
 from io import BytesIO
+import multiprocessing as mp
 
 from aiohttp import web
 import socketio
 from PIL import Image
 
+from server import start_server
+
 # this is hacky, but as long as the interface is clean we can 
 # focus on making it not hacky if we need to later
-
-sio = socketio.AsyncServer()
-app = web.Application()
-sio.attach(app)
-
-@sio.on('connect')
-def connect(sid, environ):
-    print('Simulation Connected')
-
-@sio.on('disconnect')
-def disconnect(sid):
-    print('Simulation Disconnected')
-
-car_data = None
-car_data_available = Event()
-
-@sio.on('telemetry')
-def telemetry(sid, data):
-    # print('Telemetry')
-    # print('Steering: ', data['steering_angle'])
-    # print('Throttle: ', data['throttle'])
-    # print('   Speed: ', data['speed'])
-    car_data = data
-    car_data_available.set()
 
 class Telemetry:
     def __init__(self, data):
         self.steering = data['steering_angle']
         self.throttle = data['throttle']
         self.speed = data['speed']
+        self.front_camera_image = data['front_image']
+        self.overhead_camera_image = data['overhead_image']
+
+    def __str__(self):
+        return ('Steering: {0}\n'
+                'Throttle: {1}\n'
+                'Speed: {2}\n').format(self.steering, self.throttle, self.speed)
+
 
 class SimClient:
     def start(self):
-        self.loop = asyncio.get_event_loop()
-        handler = app.make_handler()
-        f = self.loop.create_server(handler, '127.0.0.1', 4567)
-        self.srv = self.loop.run_until_complete(f)
+        # self.loop = asyncio.get_event_loop()
+        # handler = app.make_handler()
+        # f = self.loop.create_server(handler, '127.0.0.1', 4567)
+        # self.srv = asyncio.ensure_future(f)
+        # asyncio.get_event_loop().run_until_complete(self.srv)
+        self.tel_queue = mp.Queue()
+        self.instr_queue = mp.Queue()
+        self.server_process = mp.Process(
+            target=start_server,
+            args=(self.tel_queue, self.instr_queue,))
+        self.server_process.start()
 
     def get_telemetry(self):
         '''
@@ -53,8 +47,7 @@ class SimClient:
         timestep being available. If called more than once after the same
         timestep, raises an exception, so save the returned telemetry somewhere.
         '''
-        _ = yield from car_data_available.wait()
-        print(car_data)
+        return Telemetry(self.tel_queue.get())
         
     def send_instructions(self, steering, throttle):
         '''
@@ -63,8 +56,4 @@ class SimClient:
         pass
 
     def stop(self):
-        self.srv.close()
-        self.loop.run_until_complete(self.srv.wait_closed())
-        self.loop.run_until_complete(app.shutdown())
-        self.loop.run_until_complete(handler.shutdown(60.0))
-        self.loop.run_until_complete(app.cleanup())
+        self.server_process.terminate()
