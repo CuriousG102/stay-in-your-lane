@@ -30,7 +30,6 @@ def start_server(tel_queue, instr_queue):
     @sio.on('instruction')
     async def instruction(sid, data):
         instructions = instr_queue.get()
-        print('sent instruction')
         await sio.emit('instructions', instructions)
 
     web.run_app(app, host='127.0.0.1', port=4567)
