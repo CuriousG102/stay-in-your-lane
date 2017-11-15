@@ -25,26 +25,10 @@ public class CommandServer : MonoBehaviour
     }
 
     void OnInstructions(SocketIOEvent e) {
-        Debug.Log("instructions1");
         JSONObject jsonObject = e.data;
-        // Debug.Log("instructions2");
         CarRemoteControl.SteeringAngle = float.Parse(jsonObject.GetField("steering_angle").str);
-        // Debug.Log("instructions3");
         CarRemoteControl.Acceleration = float.Parse(jsonObject.GetField("throttle").str);
-        // Debug.Log("instructions4");
-        // gotInstructions = true;
-        // Debug.Log("instructions5");
         Time.timeScale = 1;
-        // Debug.Log("instructions6");
-    }
-
-    void Update() {
-        // Debug.Log("update");
-        // if (gotInstructions) {
-            // Debug.Log("Resetting Timescale");
-            // gotInstructions = false;
-            // Time.timeScale = 1;
-        // }
     }
 
     void FixedUpdate()
@@ -62,7 +46,6 @@ public class CommandServer : MonoBehaviour
         data["delta_time"] = Time.deltaTime.ToString("N4");
         _socket.Emit("telemetry", new JSONObject(data));
         _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
-        Debug.Log("Telemetry and Instruction Ask");
         Time.timeScale = 0;
     }
 }
