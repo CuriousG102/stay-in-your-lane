@@ -25,19 +25,12 @@ def start_server(tel_queue, instr_queue):
 
     @sio.on('telemetry')
     def telemetry(sid, data):
-        # print('Telemetry')
-        # print('Steering: ', data['steering_angle'])
-        # print('Throttle: ', data['throttle'])
-        # print('   Speed: ', data['speed'])
-        # car_data = data
-        # car_data_available.set()
         tel_queue.put(data)
-        # pipe.send(data)
 
     @sio.on('instruction')
-    def instruction(sid, data):
-        # client_instructions = pipe.rcv()
+    async def instruction(sid, data):
         instructions = instr_queue.get()
-        sio.emit('instructions', instructions)
+        print('sent instruction')
+        await sio.emit('instructions', instructions)
 
     web.run_app(app, host='127.0.0.1', port=4567)
