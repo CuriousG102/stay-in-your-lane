@@ -14,7 +14,7 @@ public class CommandServer : MonoBehaviour
     private SocketIOComponent _socket;
     private CarController _carController;
     private int i = 1;
-    private bool gotInstructions = false;
+    // private bool gotInstructions = false;
 
     // Use this for initialization
     void Start()
@@ -27,22 +27,24 @@ public class CommandServer : MonoBehaviour
     void OnInstructions(SocketIOEvent e) {
         Debug.Log("instructions1");
         JSONObject jsonObject = e.data;
-        Debug.Log("instructions2");
+        // Debug.Log("instructions2");
         CarRemoteControl.SteeringAngle = float.Parse(jsonObject.GetField("steering_angle").str);
-        Debug.Log("instructions3");
+        // Debug.Log("instructions3");
         CarRemoteControl.Acceleration = float.Parse(jsonObject.GetField("throttle").str);
-        Debug.Log("instructions4");
-        gotInstructions = true;
-        Debug.Log("instructions5");
+        // Debug.Log("instructions4");
+        // gotInstructions = true;
+        // Debug.Log("instructions5");
+        Time.timeScale = 1;
+        // Debug.Log("instructions6");
     }
 
     void Update() {
         // Debug.Log("update");
-        if (gotInstructions) {
-            Debug.Log("Resetting Timescale");
-            gotInstructions = false;
-            Time.timeScale = 1;
-        }
+        // if (gotInstructions) {
+            // Debug.Log("Resetting Timescale");
+            // gotInstructions = false;
+            // Time.timeScale = 1;
+        // }
     }
 
     void FixedUpdate()
@@ -61,6 +63,6 @@ public class CommandServer : MonoBehaviour
         _socket.Emit("telemetry", new JSONObject(data));
         _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
         Debug.Log("Telemetry and Instruction Ask");
-        // Time.timeScale = 0;
+        Time.timeScale = 0;
     }
 }
