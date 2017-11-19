@@ -48,12 +48,21 @@ class SimClient:
         
     def send_instructions(self, steering, throttle):
         '''
+        Call this or reset instruction, never both.
         Sends instructions to the car for it to run with during next timestep.
         '''
         self.instr_queue.put({
             'steering_angle': str(float(steering)),
-            'throttle': str(float(throttle))
+            'throttle': str(float(throttle)),
+            'reset': 'no'
         })
+
+    def reset_instruction(self):
+        '''
+        Call this or send instruction, never both.
+        Resets car to original state for restarting training.
+        '''
+        self.instr_queue.put({'reset': 'yes'})
 
     def stop(self):
         self.server_process.terminate()
