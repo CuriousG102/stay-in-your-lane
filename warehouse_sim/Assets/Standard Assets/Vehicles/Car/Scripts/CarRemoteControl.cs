@@ -17,21 +17,11 @@ namespace UnityStandardAssets.Vehicles.Car
         {
             // get the car controller
             m_Car = GetComponent<CarController>();
-            s = new Steering();
-            s.Start();
         }
 
         private void FixedUpdate()
         {
-            // If holding down W or S control the car manually
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S))
-            {
-                s.UpdateValues();
-                m_Car.Move(s.H, s.V, s.V, 0f);
-            } else
-            {
-                m_Car.Move(SteeringAngle, Acceleration, Acceleration, 0f);
-            }
+            m_Car.Move(SteeringAngle, Acceleration, Acceleration, 0f);
         }
     }
 }

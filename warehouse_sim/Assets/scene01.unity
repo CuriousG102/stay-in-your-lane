@@ -140,6 +140,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CarRemoteControl: {fileID: 1295775523}
+  CarController: {fileID: 1295775522}
   FrontFacingCamera: {fileID: 1562065733}
   OverheadCamera: {fileID: 1078055451}
 --- !u!4 &91677645
@@ -2256,6 +2257,12 @@ Prefab:
 GameObject:
   m_PrefabParentObject: {fileID: 100042, guid: 0e7ee4df08df88c4880f43398f9ad2c2, type: 2}
   m_PrefabInternal: {fileID: 1950287471}
+--- !u!114 &1295775522 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 11400002, guid: 0e7ee4df08df88c4880f43398f9ad2c2,
+    type: 2}
+  m_PrefabInternal: {fileID: 1950287471}
+  m_Script: {fileID: 11500000, guid: 3ea65b38d485c374caa584a03f1de571, type: 3}
 --- !u!114 &1295775523
 MonoBehaviour:
   m_ObjectHideFlags: 0

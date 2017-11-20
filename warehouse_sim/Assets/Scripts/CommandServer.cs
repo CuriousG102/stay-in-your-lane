@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using SocketIO;
+using UnityEngine.SceneManagement;
 using UnityStandardAssets.Vehicles.Car;
 using System;
 using System.Security.AccessControl;
@@ -9,6 +10,7 @@ using System.Security.AccessControl;
 public class CommandServer : MonoBehaviour
 {
     public CarRemoteControl CarRemoteControl;
+    public CarController CarController;
     public Camera FrontFacingCamera;
     public Camera OverheadCamera;
     private SocketIOComponent _socket;
@@ -22,10 +24,17 @@ public class CommandServer : MonoBehaviour
         _socket = GameObject.Find("SocketIO").GetComponent<SocketIOComponent>();
         _carController = CarRemoteControl.GetComponent<CarController>();
         _socket.On("instructions", OnInstructions);
+        Application.runInBackground = true;
     }
 
     void OnInstructions(SocketIOEvent e) {
         JSONObject jsonObject = e.data;
+        string resetInstructions = jsonObject.GetField("reset").str;
+        if (resetInstructions == "yes") {
+            SceneManager.LoadScene(SceneManager.GetSceneAt(0).name);
+            Time.timeScale = 1;
+            return;
+        }
         CarRemoteControl.SteeringAngle = float.Parse(jsonObject.GetField("steering_angle").str);
         CarRemoteControl.Acceleration = float.Parse(jsonObject.GetField("throttle").str);
         Time.timeScale = 1;
