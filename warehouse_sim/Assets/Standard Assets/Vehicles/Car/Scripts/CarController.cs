@@ -54,6 +54,8 @@ namespace UnityStandardAssets.Vehicles.Car
         public float MaxSpeed{get { return m_Topspeed; }}
         public float Revs { get; private set; }
         public float AccelInput { get; private set; }
+        public Vector3 Position { get { return m_Rigidbody.position; }}
+        public Quaternion Rotation { get {return m_Rigidbody.rotation; }}
 
         // Use this for initialization
         private void Start()

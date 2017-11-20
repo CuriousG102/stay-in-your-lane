@@ -21,13 +21,23 @@ class Telemetry:
         self.front_camera_image = Image.open(BytesIO(base64.b64decode(data['front_image'])))
         self.overhead_camera_image = Image.open(BytesIO(base64.b64decode(data['overhead_image'])))
         self.delta_time = data['delta_time']
+        self.x, self.y, self.z = data['x'], data['y'], data['z']
+        self.rot_x = data['rot_x']
+        self.rot_y = data['rot_y']
+        self.rot_z = data['rot_z']
 
     def __str__(self):
-        return ('Steering: {0}\n'
-                'Throttle: {1}\n'
-                'Speed: {2}\n'
-                'Delta Time: {3}\n').format(self.steering, self.throttle,
-                                            self.speed, self.delta_time)
+        return (
+            'Steering: {0}\n'
+            'Throttle: {1}\n'
+            'Speed: {2}\n'
+            'Delta Time: {3}\n'
+            'Pos: {4}'
+            'Rot: {5}'
+        ).format(
+            self.steering, self.throttle, self.speed, self.delta_time,
+            (self.x, self.y, self.z,), 
+            (self.rot_x, self.rot_y, self.rot_z,))
 
 
 class SimClient:
