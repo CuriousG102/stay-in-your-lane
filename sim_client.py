@@ -25,7 +25,7 @@ class Telemetry:
         self.rot_x = float(data['rot_x'])
         self.rot_y = float(data['rot_y'])
         self.rot_z = float(data['rot_z'])
-        self.colliding = bool(data['is_colliding'].lower())
+        self.colliding = data['is_colliding'] == 'True'
 
     def __str__(self):
         return (
