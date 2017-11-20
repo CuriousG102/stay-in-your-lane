@@ -32,8 +32,8 @@ class Telemetry:
             'Throttle: {1}\n'
             'Speed: {2}\n'
             'Delta Time: {3}\n'
-            'Pos: {4}'
-            'Rot: {5}'
+            'Pos: {4}\n'
+            'Rot: {5}\n'
         ).format(
             self.steering, self.throttle, self.speed, self.delta_time,
             (self.x, self.y, self.z,), 
