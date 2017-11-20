@@ -15,19 +15,32 @@ from server import start_server
 
 class Telemetry:
     def __init__(self, data):
-        self.steering = data['steering_angle']
-        self.throttle = data['throttle']
-        self.speed = data['speed']
+        self.steering = float(data['steering_angle'])
+        self.throttle = float(data['throttle'])
+        self.speed = float(data['speed'])
         self.front_camera_image = Image.open(BytesIO(base64.b64decode(data['front_image'])))
         self.overhead_camera_image = Image.open(BytesIO(base64.b64decode(data['overhead_image'])))
-        self.delta_time = data['delta_time']
+        self.delta_time = float(data['delta_time'])
+        self.x, self.y, self.z = float(data['x']), float(data['y']), float(data['z'])
+        self.rot_x = float(data['rot_x'])
+        self.rot_y = float(data['rot_y'])
+        self.rot_z = float(data['rot_z'])
+        self.colliding = data['is_colliding'] == 'True'
 
     def __str__(self):
-        return ('Steering: {0}\n'
-                'Throttle: {1}\n'
-                'Speed: {2}\n'
-                'Delta Time: {3}\n').format(self.steering, self.throttle,
-                                            self.speed, self.delta_time)
+        return (
+            'Steering: {0}\n'
+            'Throttle: {1}\n'
+            'Speed: {2}\n'
+            'Delta Time: {3}\n'
+            'Pos: {4}\n'
+            'Rot: {5}\n'
+            'Colliding: {6}\n'
+        ).format(
+            self.steering, self.throttle, self.speed, self.delta_time,
+            (self.x, self.y, self.z,), 
+            (self.rot_x, self.rot_y, self.rot_z,),
+            self.colliding)
 
 
 class SimClient:

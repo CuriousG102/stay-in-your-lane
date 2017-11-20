@@ -53,6 +53,18 @@ public class CommandServer : MonoBehaviour
         data["front_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(FrontFacingCamera));
         data["overhead_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(OverheadCamera));
         data["delta_time"] = Time.deltaTime.ToString("N4");
+        Vector3 position = _carController.Position;
+        data["x"] = position.x.ToString("N4");
+        data["y"] = position.y.ToString("N4");
+        data["z"] = position.z.ToString("N4");
+        Quaternion rotation = _carController.Rotation;
+        float angle;
+        Vector3 angleAxis;
+        rotation.ToAngleAxis(out angle, out angleAxis);
+        data["rot_x"] = (angle * angleAxis.x).ToString("N4");
+        data["rot_y"] = (angle * angleAxis.y).ToString("N4");
+        data["rot_z"] = (angle * angleAxis.z).ToString("N4");
+        data["is_colliding"] = _carController.IsColliding.ToString();
         _socket.Emit("telemetry", new JSONObject(data));
         _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
         Time.timeScale = 0;
