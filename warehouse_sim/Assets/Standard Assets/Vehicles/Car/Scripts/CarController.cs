@@ -46,6 +46,7 @@ namespace UnityStandardAssets.Vehicles.Car
         private float m_CurrentTorque;
         private Rigidbody m_Rigidbody;
         private const float k_ReversingThreshold = 0.01f;
+        private bool m_IsColliding = false;
 
         public bool Skidding { get; private set; }
         public float BrakeInput { get; private set; }
@@ -55,7 +56,8 @@ namespace UnityStandardAssets.Vehicles.Car
         public float Revs { get; private set; }
         public float AccelInput { get; private set; }
         public Vector3 Position { get { return m_Rigidbody.position; }}
-        public Quaternion Rotation { get {return m_Rigidbody.rotation; }}
+        public Quaternion Rotation { get { return m_Rigidbody.rotation; }}
+        public bool IsColliding { get { return m_IsColliding; }}
 
         // Use this for initialization
         private void Start()
@@ -127,6 +129,15 @@ namespace UnityStandardAssets.Vehicles.Car
             Revs = ULerp(revsRangeMin, revsRangeMax, m_GearFactor);
         }
 
+        void OnCollisionEnter(Collision c) {
+            Debug.Log("COLLISION");
+            m_IsColliding = true;
+        }
+
+        void OnCollisionExit(Collision c) {
+            Debug.Log("NO COLLISION");
+            m_IsColliding = false;
+        }
 
         public void Move(float steering, float accel, float footbrake, float handbrake)
         {
