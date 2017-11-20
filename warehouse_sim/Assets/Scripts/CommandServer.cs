@@ -65,6 +65,7 @@ public class CommandServer : MonoBehaviour
         data["rot_y"] = (angle * angleAxis.y).ToString("N4");
         data["rot_z"] = (angle * angleAxis.z).ToString("N4");
         data["is_colliding"] = _carController.IsColliding.ToString();
+        data["is_finished"] = _carController.IsFinished.ToString();
         _socket.Emit("telemetry", new JSONObject(data));
         _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
         Time.timeScale = 0;
