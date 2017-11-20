@@ -26,6 +26,7 @@ class Telemetry:
         self.rot_y = float(data['rot_y'])
         self.rot_z = float(data['rot_z'])
         self.colliding = data['is_colliding'] == 'True'
+        self.finished = data['is_finished'] == 'True'
 
     def __str__(self):
         return (
@@ -36,11 +37,12 @@ class Telemetry:
             'Pos: {4}\n'
             'Rot: {5}\n'
             'Colliding: {6}\n'
+            'Finished: {7}\n'
         ).format(
             self.steering, self.throttle, self.speed, self.delta_time,
             (self.x, self.y, self.z,), 
             (self.rot_x, self.rot_y, self.rot_z,),
-            self.colliding)
+            self.colliding, self.finished)
 
 
 class SimClient:

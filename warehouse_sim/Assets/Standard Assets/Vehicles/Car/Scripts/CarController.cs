@@ -36,6 +36,7 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_RevRangeBoundary = 1f;
         [SerializeField] private float m_SlipLimit;
         [SerializeField] private float m_BrakeTorque;
+        [SerializeField] private GameObject m_FinishLine;
 
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
@@ -47,6 +48,7 @@ namespace UnityStandardAssets.Vehicles.Car
         private Rigidbody m_Rigidbody;
         private const float k_ReversingThreshold = 0.01f;
         private bool m_IsColliding = false;
+        private bool m_IsFinished = false;
 
         public bool Skidding { get; private set; }
         public float BrakeInput { get; private set; }
@@ -58,6 +60,7 @@ namespace UnityStandardAssets.Vehicles.Car
         public Vector3 Position { get { return m_Rigidbody.position; }}
         public Quaternion Rotation { get { return m_Rigidbody.rotation; }}
         public bool IsColliding { get { return m_IsColliding; }}
+        public bool IsFinished { get { return m_IsFinished; }}
 
         // Use this for initialization
         private void Start()
@@ -132,6 +135,9 @@ namespace UnityStandardAssets.Vehicles.Car
         void OnCollisionEnter(Collision c) {
             Debug.Log("COLLISION");
             m_IsColliding = true;
+            if (c.gameObject == m_FinishLine) {
+                m_IsFinished = true;
+            }
         }
 
         void OnCollisionExit(Collision c) {
