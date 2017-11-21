@@ -37,13 +37,15 @@ class Telemetry:
             'Pos: {4}\n'
             'Rot: {5}\n'
             'Colliding: {6}\n'
-            'Finished: {7}\n'
+            'Finished: {7}'
         ).format(
             self.steering, self.throttle, self.speed, self.delta_time,
             (self.x, self.y, self.z,), 
             (self.rot_x, self.rot_y, self.rot_z,),
             self.colliding, self.finished)
 
+class OrderingException(Exception):
+    pass
 
 class SimClient:
     def start(self):
@@ -53,12 +55,14 @@ class SimClient:
             target=start_server,
             args=(self.tel_queue, self.instr_queue,))
         self.server_process.start()
+        self.got_telemetry = False
 
     def get_telemetry(self):
         '''
         Gets Telemetry from car. Don't call twice in one step 
         or you'll be blocked forever.
         '''
+        self.got_telemetry = True
         return Telemetry(self.tel_queue.get())
         
     def send_instructions(self, steering, throttle):
@@ -66,6 +70,12 @@ class SimClient:
         Call this or reset instruction, never both.
         Sends instructions to the car for it to run with during next timestep.
         '''
+        if not self.got_telemetry:
+            self.stop()
+            raise OrderingException('Must always get telemetry '
+                                    'before send_instructions '
+                                    'Server has been shut down.')
+        self.got_telemetry = False
         self.instr_queue.put({
             'steering_angle': str(float(steering)),
             'throttle': str(float(throttle)),
@@ -77,7 +87,19 @@ class SimClient:
         Call this or send instruction, never both.
         Resets car to original state for restarting training.
         '''
+        if not self.got_telemetry:
+            self.stop()
+            raise OrderingException('Must always get telemetry '
+                                    'before reset_instructions. '
+                                    'Server has been shut down.')
+        self.got_telemetry = False
         self.instr_queue.put({'reset': 'yes'})
+
+        # Sometimes Unity takes a few steps to reset, so we loop here to mask this
+        # from the client
+        for _ in range(20):
+            self.get_telemetry()
+            self.send_instructions(0, 0)
 
     def stop(self):
         self.server_process.terminate()
