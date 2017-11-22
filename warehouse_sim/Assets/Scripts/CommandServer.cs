@@ -13,6 +13,7 @@ public class CommandServer : MonoBehaviour
     public CarController CarController;
     public Camera FrontFacingCamera;
     public Camera OverheadCamera;
+    public bool ManualControl;
     private SocketIOComponent _socket;
     private CarController _carController;
     private int i = 1;
@@ -22,8 +23,10 @@ public class CommandServer : MonoBehaviour
     void Start()
     {
         _socket = GameObject.Find("SocketIO").GetComponent<SocketIOComponent>();
-        _carController = CarRemoteControl.GetComponent<CarController>();
-        _socket.On("instructions", OnInstructions);
+        _carController = CarController;
+        if (!ManualControl) {
+            _socket.On("instructions", OnInstructions);
+        }
         Application.runInBackground = true;
     }
 
@@ -66,8 +69,15 @@ public class CommandServer : MonoBehaviour
         data["rot_z"] = (angle * angleAxis.z).ToString("N4");
         data["is_colliding"] = _carController.IsColliding.ToString();
         data["is_finished"] = _carController.IsFinished.ToString();
-        _socket.Emit("telemetry", new JSONObject(data));
-        _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
-        Time.timeScale = 0;
+        if (!ManualControl) {
+            _socket.Emit("telemetry", new JSONObject(data));
+            _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
+            Time.timeScale = 0;
+        } else if (Time.frameCount % 60 == 0) {
+            UnityMainThreadDispatcher.Instance().Enqueue(() => 
+            {
+                _socket.Emit("telemetry", new JSONObject(data));
+            });
+        }
     }
 }

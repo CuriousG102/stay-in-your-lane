@@ -47,7 +47,7 @@ class Telemetry:
 class OrderingException(Exception):
     pass
 
-class SimClient:
+class SimObserverClient:
     def start(self):
         self.tel_queue = mp.Queue()
         self.instr_queue = mp.Queue()
@@ -55,6 +55,21 @@ class SimClient:
             target=start_server,
             args=(self.tel_queue, self.instr_queue,))
         self.server_process.start()
+
+    def get_telemetry(self):
+        '''
+        Gets Telemetry from car. Don't call twice in one step 
+        or you'll be blocked forever.
+        '''
+        return Telemetry(self.tel_queue.get())
+
+    def stop(self):
+        self.server_process.terminate()
+
+
+class SimClient(SimObserverClient):
+    def start(self):
+        super().start()
         self.got_telemetry = False
 
     def get_telemetry(self):
@@ -63,7 +78,7 @@ class SimClient:
         or you'll be blocked forever.
         '''
         self.got_telemetry = True
-        return Telemetry(self.tel_queue.get())
+        return super().get_telemetry()
         
     def send_instructions(self, steering, throttle):
         '''
@@ -100,6 +115,3 @@ class SimClient:
         for _ in range(20):
             self.get_telemetry()
             self.send_instructions(0, 0)
-
-    def stop(self):
-        self.server_process.terminate()
