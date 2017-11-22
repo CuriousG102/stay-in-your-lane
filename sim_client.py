@@ -10,7 +10,7 @@ from PIL import Image
 
 from server import start_server
 
-# this is hacky, but as long as the interface is clean we can 
+# this is hacky, but as long as the interface is clean we can
 # focus on making it not hacky if we need to later
 
 class Telemetry:
@@ -41,11 +41,11 @@ class SimClient:
 
     def get_telemetry(self):
         '''
-        Gets Telemetry from car. Don't call twice in one step 
+        Gets Telemetry from car. Don't call twice in one step
         or you'll be blocked forever.
         '''
         return Telemetry(self.tel_queue.get())
-        
+
     def send_instructions(self, steering, throttle):
         '''
         Sends instructions to the car for it to run with during next timestep.
@@ -54,6 +54,15 @@ class SimClient:
             'steering_angle': str(float(steering)),
             'throttle': str(float(throttle))
         })
+    def show_Image(self):
+        t = self.get_telemetry()
+        t.front_camera_image
+        return t
+
+    def follow_Line(self):
+
 
     def stop(self):
         self.server_process.terminate()
+
+
