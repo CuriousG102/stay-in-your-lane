@@ -3,7 +3,6 @@ from threading import Event, Thread
 import base64
 from io import BytesIO
 import multiprocessing as mp
-from queue import Queue
 import threading
 
 from aiohttp import web
