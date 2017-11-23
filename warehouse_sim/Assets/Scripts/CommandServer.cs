@@ -13,6 +13,8 @@ public class CommandServer : MonoBehaviour
     public CarController CarController;
     public Camera FrontFacingCamera;
     public Camera OverheadCamera;
+    public Camera CheaterCamera;
+    public bool ManualControl;
     private SocketIOComponent _socket;
     private CarController _carController;
     private int i = 1;
@@ -22,8 +24,10 @@ public class CommandServer : MonoBehaviour
     void Start()
     {
         _socket = GameObject.Find("SocketIO").GetComponent<SocketIOComponent>();
-        _carController = CarRemoteControl.GetComponent<CarController>();
-        _socket.On("instructions", OnInstructions);
+        _carController = CarController;
+        if (!ManualControl) {
+            _socket.On("instructions", OnInstructions);
+        }
         Application.runInBackground = true;
     }
 
@@ -40,18 +44,14 @@ public class CommandServer : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    void FixedUpdate()
-    {
-        if (i < 100) {
-            ++i;
-            return;
-        }
+    void EmitTelemetry() {
         Dictionary<string, string> data = new Dictionary<string, string>();
         data["steering_angle"] = _carController.CurrentSteerAngle.ToString("N4");
         data["throttle"] = _carController.AccelInput.ToString("N4");
         data["speed"] = _carController.CurrentSpeed.ToString("N4");
         data["front_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(FrontFacingCamera));
         data["overhead_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(OverheadCamera));
+        data["cheater_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(CheaterCamera));
         data["delta_time"] = Time.deltaTime.ToString("N4");
         Vector3 position = _carController.Position;
         data["x"] = position.x.ToString("N4");
@@ -67,6 +67,24 @@ public class CommandServer : MonoBehaviour
         data["is_colliding"] = _carController.IsColliding.ToString();
         data["is_finished"] = _carController.IsFinished.ToString();
         _socket.Emit("telemetry", new JSONObject(data));
+    }
+
+    void Update() {
+        if (ManualControl) {
+            EmitTelemetry();
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (ManualControl) {
+            return;
+        }
+        if (i < 100) {
+            ++i;
+            return;
+        }
+        EmitTelemetry();
         _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
         Time.timeScale = 0;
     }
