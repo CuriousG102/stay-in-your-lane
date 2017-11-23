@@ -79,15 +79,70 @@ def detect_horizon(Image_Loc):
     cv2.imshow('gray', gray)
 
 
+# def Analytic(Image_Loc,s = 1, h = 20, horizon=370):
+#     '''
+#
+#     :param Image: Image location
+#     :param horizon: detect horizon doesn't work so well insert manually
+#     :return:
+#     '''
+#     img= cv2.imread(Image_Loc)
+#     img = img[horizon:,:]  #cropping the image
+#     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     cv2.imshow('check',img)
+#     cv2.waitKey()
+#     Fin = np.zeros((img.shape[1],img.shape[1]))
+#     threshhold =3
+#     Far_Length = s*h/threshhold
+#     for x,row in enumerate(img):
+#         for y,val in enumerate(row):
+#             if y>threshhold:
+#                 try:
+#                     Y = np.floor(s*h/y)
+#                     X = np.floor(((x-img.shape[1]/2)*Y/s))+img.shape[1]/2
+#                     print(val)
+#                     Fin[int(Y),int(X)]=val/255
+#                 except:
+#                     continue
+#
+#     cv2.imshow('D',np.array(Fin))
+#     cv2.waitKey()
+
+def Analytic2(image, h= 2,theta = np.pi*15/180):
+    f = h / np.sin(theta)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    imageY, imageX = image.shape
+    u0 = imageX/2
+    v0 = imageY/2 - imageY/3.4
+    scaleX = 1
+    scaleY= 1
+    P = np.array([[f*scaleX,u0,-h*u0/np.sin(theta)],[0,-f*scaleY*np.sin(theta)+v0*np.cos(theta),-h*v0/np.sin(theta)],[0,np.cos(theta),-h/np.sin(theta)]])
+    Pinv = np.linalg.inv(P)
+    Homograph = np.zeros((1000,1000))
+    image = image[int(imageY/3.4):,:]
+    cv2.imshow('d',image)
+    cv2.waitKey()
+    for x, row in enumerate(image):
+        for y, val in enumerate(row):
+            coordinates = np.matmul(Pinv, np.array([x, y, 1]))
+            Homograph[int(coordinates[0]),int(coordinates[1])]= val/255
+    cv2.imshow('Bird\'s Eye View',Homograph)
+    cv2.waitKey()
+    return P, u0,v0
+
+
 
 if __name__ == '__main__':
-    Image = 'rail.jpg'
-    Pixels = [[1000,730],[100,730],[700,500],[300,500]]
-    Example = Flatten_Car_Image(Image,Pixels)
-    img = cv2.imread(Image)
-    plt.subplot(121), plt.imshow(img), plt.title('Input')
-    plt.subplot(122), plt.imshow(Example), plt.title('Output')
-    plt.show()
+    Image = 'example.png'
+    Image = cv2.imread(Image)
+    P,u0,v0 = Analytic2(Image)
+    print(np.matmul(np.linalg.inv(P),np.array([u0,v0,1])))
+    # Pixels = [[1000,730],[100,730],[700,500],[300,500]]
+    # Example = Flatten_Car_Image(Image,Pixels)
+    # img = cv2.imread(Image)
+    # plt.subplot(121), plt.imshow(img), plt.title('Input')
+    # plt.subplot(122), plt.imshow(Example), plt.title('Output')
+    # plt.show()
    # make_squares(512,8)
 
 
