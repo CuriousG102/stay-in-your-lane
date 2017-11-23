@@ -13,6 +13,7 @@ public class CommandServer : MonoBehaviour
     public CarController CarController;
     public Camera FrontFacingCamera;
     public Camera OverheadCamera;
+    public Camera CheaterCamera;
     public bool ManualControl;
     private SocketIOComponent _socket;
     private CarController _carController;
@@ -50,6 +51,7 @@ public class CommandServer : MonoBehaviour
         data["speed"] = _carController.CurrentSpeed.ToString("N4");
         data["front_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(FrontFacingCamera));
         data["overhead_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(OverheadCamera));
+        data["cheater_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(CheaterCamera));
         data["delta_time"] = Time.deltaTime.ToString("N4");
         Vector3 position = _carController.Position;
         data["x"] = position.x.ToString("N4");

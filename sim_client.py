@@ -21,6 +21,7 @@ class Telemetry:
         self.speed = float(data['speed'])
         self.front_camera_image = Image.open(BytesIO(base64.b64decode(data['front_image'])))
         self.overhead_camera_image = Image.open(BytesIO(base64.b64decode(data['overhead_image'])))
+        self.cheater_camera_image = Image.open(BytesIO(base64.b64decode(data['cheater_image'])))
         self.delta_time = float(data['delta_time'])
         self.x, self.y, self.z = float(data['x']), float(data['y']), float(data['z'])
         self.rot_x = float(data['rot_x'])
