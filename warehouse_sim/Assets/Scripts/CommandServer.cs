@@ -43,12 +43,7 @@ public class CommandServer : MonoBehaviour
         Time.timeScale = 1;
     }
 
-    void FixedUpdate()
-    {
-        if (i < 100) {
-            ++i;
-            return;
-        }
+    void EmitTelemetry() {
         Dictionary<string, string> data = new Dictionary<string, string>();
         data["steering_angle"] = _carController.CurrentSteerAngle.ToString("N4");
         data["throttle"] = _carController.AccelInput.ToString("N4");
@@ -69,15 +64,26 @@ public class CommandServer : MonoBehaviour
         data["rot_z"] = (angle * angleAxis.z).ToString("N4");
         data["is_colliding"] = _carController.IsColliding.ToString();
         data["is_finished"] = _carController.IsFinished.ToString();
-        if (!ManualControl) {
-            _socket.Emit("telemetry", new JSONObject(data));
-            _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
-            Time.timeScale = 0;
-        } else if (Time.frameCount % 60 == 0) {
-            UnityMainThreadDispatcher.Instance().Enqueue(() => 
-            {
-                _socket.Emit("telemetry", new JSONObject(data));
-            });
+        _socket.Emit("telemetry", new JSONObject(data));
+    }
+
+    void Update() {
+        if (ManualControl) {
+            EmitTelemetry();
         }
+    }
+
+    void FixedUpdate()
+    {
+        if (ManualControl) {
+            return;
+        }
+        if (i < 100) {
+            ++i;
+            return;
+        }
+        EmitTelemetry();
+        _socket.Emit("instruction", new JSONObject(new Dictionary<string, string>()));
+        Time.timeScale = 0;
     }
 }

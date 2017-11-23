@@ -229,7 +229,11 @@ namespace SocketIO
 
 		public void Emit(string ev, JSONObject data)
 		{
-			EmitMessage(-1, string.Format("[\"{0}\",{1}]", ev, data));
+			JSONObject newMessage = new JSONObject(
+				new JSONObject[] {
+					JSONObject.StringObject(ev),
+					data});
+			EmitMessage(-1, newMessage);
 		}
 
 		public void Emit(string ev, JSONObject data, Action<JSONObject> action)
@@ -291,6 +295,13 @@ namespace SocketIO
 		private void EmitMessage(int id, string raw)
 		{
 			EmitPacket(new Packet(EnginePacketType.MESSAGE, SocketPacketType.EVENT, 0, "/", id, new JSONObject(raw)));
+		}
+
+		private void EmitMessage(int id, JSONObject jsonObject) {
+			EmitPacket(new Packet(
+				EnginePacketType.MESSAGE, 
+				SocketPacketType.EVENT, 0, "/", id, 
+				jsonObject));
 		}
 
 		private void EmitClose()
