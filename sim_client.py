@@ -70,10 +70,11 @@ class SimObserverClient:
 
 latest_tel = None
 
-def continuously_pipe_telemetry(tel_in_queue, stop_event):
+def continuously_pipe_telemetry(tel_in_queue, new_data_event, stop_event):
     global latest_tel
     while True:
         latest_tel = tel_in_queue.get()
+        new_data_event.set()
         if (stop_event.is_set()):
             break
 
@@ -87,16 +88,19 @@ class SimObserverSamplingClient(SimObserverClient):
     def start(self):
         super().start()
         self.stop_event = threading.Event()
+        self.new_data_event = threading.Event()
         self.telemetry_consumer_loop = threading.Thread(
             target=continuously_pipe_telemetry,
-            args=(self.tel_queue, self.stop_event))
+            args=(self.tel_queue, self.new_data_event, self.stop_event))
         self.telemetry_consumer_loop.start()
 
     def get_telemetry(self):
         '''
-        Get latest telemetry
+        Gets latest telemetry.
         '''
-        return Telemetry(latest_tel) if latest_tel is not None else None
+        self.new_data_event.wait()
+        self.new_data_event.clear()
+        return Telemetry(latest_tel)
 
     def stop(self):
         super().stop()
