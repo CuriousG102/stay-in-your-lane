@@ -3,6 +3,8 @@ from threading import Event, Thread
 import base64
 from io import BytesIO
 import multiprocessing as mp
+from queue import Queue
+import threading
 
 from aiohttp import web
 import socketio
@@ -65,6 +67,41 @@ class SimObserverClient:
 
     def stop(self):
         self.server_process.terminate()
+
+latest_tel = None
+
+def continuously_pipe_telemetry(tel_in_queue, stop_event):
+    global latest_tel
+    while True:
+        latest_tel = tel_in_queue.get()
+        if (stop_event.is_set()):
+            break
+
+class SimObserverSamplingClient(SimObserverClient):
+    '''
+    Just like SimObserverClient, but get_telemetry call 
+    gets latest telemetry from the car rather than the least
+    recent unread telemetry. In other words, moves us from a streaming model
+    to a model where you can sample as quickly as you can process data.
+    '''
+    def start(self):
+        super().start()
+        self.stop_event = threading.Event()
+        self.telemetry_consumer_loop = threading.Thread(
+            target=continuously_pipe_telemetry,
+            args=(self.tel_queue, self.stop_event))
+        self.telemetry_consumer_loop.start()
+
+    def get_telemetry(self):
+        '''
+        Get latest telemetry
+        '''
+        return Telemetry(latest_tel) if latest_tel is not None else None
+
+    def stop(self):
+        super().stop()
+        self.stop_event.set()
+        self.telemetry_consumer_loop.join(5)
 
 
 class SimClient(SimObserverClient):
