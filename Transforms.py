@@ -51,6 +51,34 @@ def make_squares(n,m):
     plt.imshow(transformed_Image)
     plt.show()
 
+def detect_horizon(Image_Loc):
+    '''
+    Use Canny Edge detection and Hough Transform to find horizontal lines. If we
+    want to use this we need to adjust lighting.
+    :param Image_Loc: Location of image
+    :return:
+    '''
+    img = cv2.imread(Image_Loc)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 40)
+    cv2.imshow('edges', edges)
+    tol = .8
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, 300)
+    for rho, theta in lines[0]:
+        if theta > np.pi / 2 - tol and theta < np.pi / 2 + tol:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            x1 = int(x0 + 1000 * (-b))
+            y1 = int(y0 + 1000 * (a))
+            x2 = int(x0 - 1000 * (-b))
+            y2 = int(y0 - 1000 * (a))
+
+            cv2.line(gray, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    cv2.imshow('gray', gray)
+
+
 
 if __name__ == '__main__':
     Image = 'rail.jpg'
@@ -61,8 +89,6 @@ if __name__ == '__main__':
     plt.subplot(122), plt.imshow(Example), plt.title('Output')
     plt.show()
    # make_squares(512,8)
-
-
 
 
 
