@@ -312,7 +312,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CarRemoteControl: {fileID: 1295775523}
-  CarController: {fileID: 1295775522}
+  CarController: {fileID: 0}
   FrontFacingCamera: {fileID: 1562065733}
   OverheadCamera: {fileID: 1078055451}
   CheaterCamera: {fileID: 1093037179}
@@ -3441,6 +3441,10 @@ Prefab:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: b7eb6904d28b6404c902af50f380d169, type: 2}
+    - target: {fileID: 100144, guid: b89f109a409fe5c46a39fb648dbd9b57, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: b89f109a409fe5c46a39fb648dbd9b57, type: 3}
   m_IsPrefabParent: 0
@@ -4419,7 +4423,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 91
+  field of view: 108
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -4919,12 +4923,6 @@ MeshFilter:
 GameObject:
   m_PrefabParentObject: {fileID: 100042, guid: 0e7ee4df08df88c4880f43398f9ad2c2, type: 2}
   m_PrefabInternal: {fileID: 1950287471}
---- !u!114 &1295775522 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 11400002, guid: 0e7ee4df08df88c4880f43398f9ad2c2,
-    type: 2}
-  m_PrefabInternal: {fileID: 1950287471}
-  m_Script: {fileID: 11500000, guid: 3ea65b38d485c374caa584a03f1de571, type: 3}
 --- !u!114 &1295775523
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5578,7 +5576,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1562065729}
   m_LocalRotation: {x: 0.13052616, y: 0, z: 0, w: 0.9914449}
-  m_LocalPosition: {x: 0, y: 1.5, z: 1.5}
+  m_LocalPosition: {x: 0, y: 3, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1448641295}
@@ -5616,7 +5614,7 @@ Camera:
     height: 1
   near clip plane: 0.2
   far clip plane: 1000
-  field of view: 60
+  field of view: 90
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -6512,7 +6510,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1836512629}
   m_LocalRotation: {x: 0.13052617, y: -0, z: 9.313226e-10, w: 0.99144495}
-  m_LocalPosition: {x: 0, y: 1.5, z: 1.4999919}
+  m_LocalPosition: {x: 0, y: 3, z: 1.4999919}
   m_LocalScale: {x: 0.99999994, y: 0.9999998, z: 1.0000001}
   m_Children: []
   m_Father: {fileID: 1448641295}
@@ -6550,7 +6548,7 @@ Camera:
     height: 1
   near clip plane: 0.2
   far clip plane: 1000
-  field of view: 60
+  field of view: 90
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -6617,7 +6615,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 91
+  field of view: 108
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
