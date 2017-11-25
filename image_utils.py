@@ -14,6 +14,9 @@ def simple_threshold(img):
                 for color_channel in (b, g, r))
     return bt | gt | rt
 
+def crop_img_from_below(img, num_rows):
+    return img[num_rows:, :, :]
+
 # sample use of above:
 # while True:
 #     img = get_cv2_from_tel_field(s.get_telemetry(),

@@ -113,4 +113,16 @@ def get_car_view_show_matrix(position, rotation):
     selection_matrix = get_car_view_selection_matrix(position, rotation)
     return selection_matrix & TRACK_FLOOR
 
-
+def get_car_view_img(position, rotation):
+    box_points = get_car_view_box_points(position, rotation)
+    track_scale_x, track_scale_z = TRACK_SCALE
+    img_scale_z, img_scale_x = TRACK_FLOOR.shape
+    selection_size = int(
+        img_scale_x / track_scale_x * CAM_VIEW_BOX_SIDE_SIZE)
+    transform = cv2.getAffineTransform(
+        np.float32(box_points[:3]), 
+        np.float32([[selection_size, 0], 
+                    [0, 0],
+                    [0, selection_size]]))
+    return cv2.warpAffine(TRACK_FLOOR, transform, 
+                          (selection_size, selection_size))
