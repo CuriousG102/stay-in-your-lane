@@ -316,7 +316,7 @@ MonoBehaviour:
   FrontFacingCamera: {fileID: 1562065733}
   OverheadCamera: {fileID: 1078055451}
   CheaterCamera: {fileID: 1093037179}
-  ManualControl: 0
+  ManualControl: 1
 --- !u!4 &91677645
 Transform:
   m_ObjectHideFlags: 0
@@ -4486,7 +4486,7 @@ AudioListener:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1093037175}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!124 &1093037178
 Behaviour:
   m_ObjectHideFlags: 0
