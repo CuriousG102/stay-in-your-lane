@@ -125,3 +125,19 @@ def get_car_view_img(position, rotation):
                     [0, selection_size]]))
     return cv2.warpAffine(TRACK_FLOOR, transform, 
                           (selection_size, selection_size))
+
+def get_img_equality_fraction(t, cam_name, location_candidates):
+    car_img = image_utils.simple_threshold(
+        image_utils.get_cv2_from_tel_field(t, cam_name))
+    car_img_resized = None
+    car_img_resized_sum = None
+    for ((x, z), rot_y) in location_candidates:
+        map_img = get_car_view_img((x, z), rot_y).astype(np.bool)
+        if car_img_resized is None:
+            car_img_resized = cv2.resize(car_img, map_img.shape[::-1])
+            car_img_resized = car_img_resized.astype(np.bool)
+            car_img_resized_sum = car_img_resized.sum()
+        cmp_stat = (
+            (map_img & car_img_resized).sum() 
+            / max(map_img.sum(), car_img_resized_sum))
+        yield (((x, z), rot_y), cmp_stat)
