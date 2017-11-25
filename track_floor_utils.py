@@ -1,7 +1,6 @@
 import math
 
 import cv2 
-import diagonal_crop
 from PIL import Image, ImageDraw
 import numpy as np
 
