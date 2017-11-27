@@ -48,9 +48,11 @@ def create_viz(actual_telemetry, delta_t, dot_size=5):
     passed_time = 0
     for i, tel in enumerate(actual_telemetry[1:]):
         i += 1
+        print('Number ', i)
         tel_img_pos = track_floor_utils.img_point_bottom_left_to_top_left(
             track_floor_utils.unity_plane_point_to_img_point(
                 (tel.x, tel.z)))
+        print('Tel ((x,z), rot_y)', ((tel.x, tel.z), tel.rot_y))
         track = cv2.circle(
             track, tuple(int(i) for i in tel_img_pos), 5, (0, 255, 0), 5)
         passed_time += tel.delta_time
@@ -59,6 +61,7 @@ def create_viz(actual_telemetry, delta_t, dot_size=5):
                 prediction.telemetry_after_delta_time(
                     actual_telemetry[start_tel_i], 
                     estimated_pos, estimated_rot_y, passed_time))
+            print('Est ((x,z), rot_y)', (estimated_pos, estimated_rot_y))
             passed_time = 0
             start_tel_i = i
             tel_img_est_pos = track_floor_utils.img_point_bottom_left_to_top_left(

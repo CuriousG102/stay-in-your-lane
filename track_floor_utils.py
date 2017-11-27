@@ -43,7 +43,7 @@ CAM_DIST_FROM_CAR = CAR_SCALE * CAR_CAM_POS_RELATIVE[2]
 def unity_plane_point_to_img_point(unity_point):
     '''
     Convert a unity plane point (x, z) on track to an image point with
-    a bottom right origin.
+    a bottom left origin.
     '''
     unity_point_from_bottom_left = np.array(unity_point) - np.array(TRACK_BOTTOM_LEFT_POS)
     track_scale_x, track_scale_z = TRACK_SCALE
