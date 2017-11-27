@@ -1,7 +1,7 @@
 import unittest
 
 import prediction
-
+import numpy as np
 class FakeTelemetry:
     def __init__(self, fake_speed, fake_steering):
         self.speed = fake_speed
@@ -52,6 +52,92 @@ class TestHorizontalTravel(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
 
     expected_pos_prediction = (5, 0)
     expected_rot_y_prediction = 90
+
+class TestDiagonalTravelUpLeft(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = 45
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (5/np.sqrt(2), 5/np.sqrt(2))
+    expected_rot_y_prediction = 45
+
+class TestDiagonalTravelDownRight(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = 45+90
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (5/np.sqrt(2), -5/np.sqrt(2))
+    expected_rot_y_prediction = 135
+
+class TestDiagonalTravelDownLeft(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = -45-90
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (-5/np.sqrt(2), -5/np.sqrt(2))
+    expected_rot_y_prediction = -135
+
+class TestDiagonalTravelUpRight(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = -45
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (-5/np.sqrt(2), 5/np.sqrt(2))
+    expected_rot_y_prediction = -45
+
+class TestDiagonalLeft(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = -90
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (-5, 0)
+    expected_rot_y_prediction = -90
+
+class TestDown(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = 180
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (0,-5)
+    expected_rot_y_prediction = 180
+
+class TestDown2(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = 180+360
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (0,-5)
+    expected_rot_y_prediction = 180
+
+
+class TestDown3(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = -180
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (0,-5)
+    expected_rot_y_prediction = -180
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -55,7 +55,7 @@ def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
     final_front = final_front + initial_front
 
     final_direction = final_front - final_back
-    change_in_angle = math.atan(final_direction[0] / final_direction[1]) - rot_y
+    change_in_angle = math.atan2(final_direction[0], final_direction[1]) - rot_y
 
     fin_rot_y = rot_y + change_in_angle
 
