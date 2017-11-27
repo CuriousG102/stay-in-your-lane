@@ -43,5 +43,15 @@ class TestVerticalTravel(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
     expected_pos_prediction = (0, 5)
     expected_rot_y_prediction = 0
 
+class TestHorizontalTravel(unittest.TestCase, TelemetryAfterDeltaTimeTestMixin):
+    pos = (0, 0)
+    rot_y = 90
+    s_angle = 0
+    delta_time = 1
+    speed = 5
+
+    expected_pos_prediction = (5, 0)
+    expected_rot_y_prediction = 90
+
 if __name__ == '__main__':
     unittest.main()
