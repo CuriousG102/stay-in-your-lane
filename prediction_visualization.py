@@ -66,7 +66,7 @@ def create_viz(actual_telemetry, delta_t, dot_size=5):
             start_tel_i = i
             tel_img_est_pos = track_floor_utils.img_point_bottom_left_to_top_left(
                 track_floor_utils.unity_plane_point_to_img_point(
-                    (estimated_pos[0], estimated_pos[1])))
+                    (estimated_pos[0],estimated_pos[1])))
             track = cv2.circle(
                 track, tuple(int(i) for i in tel_img_est_pos), 
                 dot_size, (0, 0, 255), 5)
