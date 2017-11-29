@@ -9,6 +9,9 @@ import image_utils
 TRACK_FLOOR = (cv2.imread('TrackFloor.png')[:, :, 0]
     .astype(np.bool).astype(np.uint8) * 255)
 
+TRACK_FLOOR_FILLED = (cv2.imread('TrackFloorFilled.png')[:, :, 0]
+    .astype(np.bool))
+
 TRACK_CENTER_POS = (3.45, -70.714)
 
 TRACK_SCALE = (16.28928, 28.50579)
@@ -43,7 +46,7 @@ CAM_DIST_FROM_CAR = CAR_SCALE * CAR_CAM_POS_RELATIVE[2]
 def unity_plane_point_to_img_point(unity_point):
     '''
     Convert a unity plane point (x, z) on track to an image point with
-    a bottom right origin.
+    a bottom left origin.
     '''
     unity_point_from_bottom_left = np.array(unity_point) - np.array(TRACK_BOTTOM_LEFT_POS)
     track_scale_x, track_scale_z = TRACK_SCALE
@@ -56,6 +59,21 @@ def img_point_bottom_left_to_top_left(img_point):
     img_scale_z, img_scale_x = TRACK_FLOOR.shape
     return (img_point_x,
             img_scale_z - 1 - img_point_z)
+
+def pos_in_track(position):
+    '''
+    Returns boolean indicating whether a unity coordinate is within
+    or outside of the track
+    '''
+    top_left_point = tuple(
+        int(i) 
+        for i in img_point_bottom_left_to_top_left(
+            unity_plane_point_to_img_point(position)))[::-1]
+    track_shape = TRACK_FLOOR_FILLED.shape
+    if (top_left_point[0] >= track_shape[0] 
+        or top_left_point[1] >= track_shape[1]):
+        return False
+    return TRACK_FLOOR_FILLED[top_left_point]
 
 def get_car_view_box_center_pos(position, rotation):
     get_plane_points = lambda c, r, n: (c[0] + r * math.cos(math.radians(n - rotation)), 
