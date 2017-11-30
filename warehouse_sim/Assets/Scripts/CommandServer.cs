@@ -48,7 +48,7 @@ public class CommandServer : MonoBehaviour
         Dictionary<string, string> data = new Dictionary<string, string>();
         data["steering_angle"] = _carController.CurrentSteerAngle.ToString("N4");
         data["throttle"] = _carController.AccelInput.ToString("N4");
-        data["speed"] = _carController.CurrentSpeed.ToString("N4");
+        data["speed"] = (_carController.CurrentSpeed / 2.23693629f).ToString("N4") ;
         data["front_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(FrontFacingCamera));
         data["overhead_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(OverheadCamera));
         data["cheater_image"] = Convert.ToBase64String(CameraHelper.CaptureFrame(CheaterCamera));
