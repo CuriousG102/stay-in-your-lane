@@ -17,6 +17,13 @@ def simple_threshold(img):
 def crop_img_from_below(img, num_rows):
     return img[num_rows:, :, :]
 
+def make_movie(telemetries):
+    for tel in telemetries[4:]:
+        cv2.imshow('blah',np.array(tel.front_camera_image.convert('RGB')))
+        if (cv2.waitKey(1)& 0xFF)==ord('q'):
+            break
+    cv2.destroyAllWindows()
+
 # sample use of above:
 # while True:
 #     img = get_cv2_from_tel_field(s.get_telemetry(),
