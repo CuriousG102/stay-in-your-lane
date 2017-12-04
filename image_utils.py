@@ -1,5 +1,6 @@
 import numpy as np
-import cv2 
+import cv2
+import time
 
 def pil_image_to_open_cv_format(pil_image):
     return np.array(pil_image.convert('RGB'))[:, :, ::-1]
@@ -23,6 +24,16 @@ def make_movie(telemetries):
         if (cv2.waitKey(1)& 0xFF)==ord('q'):
             break
     cv2.destroyAllWindows()
+
+def make_movie_general(images):
+    for image in images:
+        image = cv2.resize(image,(600,600))
+        time.sleep(.03)
+        cv2.imshow('blah', np.array(image))
+        if (cv2.waitKey(1) & 0xFF) == ord('q'):
+            break
+    cv2.destroyAllWindows()
+
 
 # sample use of above:
 # while True:
