@@ -5,22 +5,11 @@ import track_floor_utils
 CAR_AXLE_FRONT = track_floor_utils.CAR_SCALE * 1.27
 CAR_AXLE_BACK = track_floor_utils.CAR_SCALE * - 1.6
 
-def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
-    '''
-    Returns ((x, z), rot_y) predicted on track floor after delta time.
-
-    Takes:
-    t: Telemetry
-    x: Known or guessed position of car
-    z: Known or guessed position of car
-    rot_y: Known or guessed rotation of car on y axis
-    delta_time: Amount of time that passes while producing our estimate.
-    '''
-    t = telemetry
+def telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, delta_time):
     x, z = pos
     rot_y = math.radians(rot_y)
-    s_angle = math.radians(t.steering)
-    speed = t.speed
+    s_angle = math.radians(s_angle)
+
     d = -CAR_AXLE_BACK + CAR_AXLE_FRONT
     initial_front = np.array([
         x + math.sin(rot_y) * CAR_AXLE_FRONT, 
@@ -69,6 +58,22 @@ def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
 
     return (tuple(car_pos),
             np.rad2deg(fin_rot_y))
+
+def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
+    '''
+    Returns ((x, z), rot_y) predicted on track floor after delta time.
+
+    Takes:
+    t: Telemetry
+    x: Known or guessed position of car
+    z: Known or guessed position of car
+    rot_y: Known or guessed rotation of car on y axis
+    delta_time: Amount of time that passes while producing our estimate.
+    '''
+    
+    return telemetry_after_delta_time_pure(
+        telemetry.speed, telemetry.steering, pos, rot_y, delta_time)
+    
 
 def break_down_into_times(telemetry, pos, rot_y, delta_time,desired_break_down):
     '''
