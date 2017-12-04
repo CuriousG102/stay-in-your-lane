@@ -254,7 +254,7 @@ def get_steering_angle_greedy(tel, pos, rot_y, delta_time):
 
 SAFETY_MARGIN = 60
 SAFETY_ADDER = 200
-CHILD_SAFETY_ADDER = 100
+CHILD_SAFETY_ADDER = 200
 CHANGE_LIMIT = 6
 CHANGE_INTVL = 2
 def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, change_limiter=True):
