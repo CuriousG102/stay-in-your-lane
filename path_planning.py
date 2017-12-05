@@ -252,15 +252,15 @@ def get_steering_angle_greedy(tel, pos, rot_y, delta_time):
     return best_angle
 
 
-SAFETY_MARGIN = 30
+SAFETY_MARGIN = 60
 T_MARGIN = 5
 assert(T_MARGIN < SAFETY_MARGIN)
 CHILD_SAFETY_ADDER = 0
-CHILD_SAFETY_MULTIPLIER = 1.2
+CHILD_SAFETY_MULTIPLIER = 1.3
 CHANGE_LIMIT = 10
 CHANGE_INTVL = 2
-NUM_BREAK_DOWNS = 5
-def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, change_limiter=True):
+NUM_BREAK_DOWNS = 10
+def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, change_limiter=True):
     img_x, img_z = (
             track_floor_utils.img_point_bottom_left_to_top_left(
                 track_floor_utils.unity_plane_point_to_img_point(pos)))
@@ -283,7 +283,7 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, ch
 
     children_generator = (
         (prediction.break_down_into_times_pure(
-            max(tel.speed, 1), s_angle, pos, rot_y, delta_time, NUM_BREAK_DOWNS), 
+            max(tel.speed, .1), s_angle, pos, rot_y, delta_time, NUM_BREAK_DOWNS), 
          s_angle)
         for s_angle in possible_angles)
     best_angle = None
@@ -301,8 +301,13 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, ch
         if OFF_TRACK_VALUE in child_safety_box or MAX_DIST_VALUE in child_safety_box:
             child_safety_adder = CHILD_SAFETY_ADDER
             child_safety_mult = CHILD_SAFETY_MULTIPLIER
-            print('Child Safety First!')
-        future_t_val = child_safety_adder + child_safety_mult * get_steering_angle_limited_horizon_helper(tel, child_pos, child_rot_y, delta_time, h - 1)[1]
+            # print('Child Safety First!')
+        future_t_val = (
+            child_safety_adder 
+            + child_safety_mult * get_steering_angle_limited_horizon_helper(
+                tel, child_pos, child_rot_y, 
+                delta_time * projection_multiplier, 
+                projection_multiplier, h - 1)[1])
         # keep it from trying to hop the track ...
         # we can do this more elegantly in the future by looking 
         # at the trajectory and seeing if it crosses any areas marked
@@ -315,5 +320,5 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, ch
 
     return (best_angle, best_t_val)
 
-def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, h):
-    return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h)[0]
+def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_multiplier, h):
+    return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h)[0]
