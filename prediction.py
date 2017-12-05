@@ -79,7 +79,7 @@ def telemetry_after_delta_time2(telemetry, pos, rot_y, delta_time):
     speed = t.speed
     d = -CAR_AXLE_BACK + CAR_AXLE_FRONT
     if s_angle>.01: #You're going in a straight line otherwise
-        R = d*math.tan(math.pi-s_angle)
+        R = d*math.tan(math.pi/2-s_angle)
     else:
         car_pos = (z+speed*math.sin(rot_y),x+speed*math.cos(rot_y))
         return(tuple(car_pos),np.rad2deg(rot_y))
