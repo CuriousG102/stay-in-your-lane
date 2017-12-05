@@ -89,7 +89,7 @@ def telemetry_after_delta_time2(telemetry, pos, rot_y, delta_time):
     if s_angle>0:
         delta_x = -delta_x
 
-    delta_x = delta_x*math.cos(rot_y) + delta_y*math.sin(rot_y)
+    delta_x = delta_x*math.cos(rot_y) + delta_z*math.sin(rot_y)
     delta_z = -delta_z*math.sin(rot_y)+delta_z*math.cos(rot_y)
     x = x+delta_x
     z = z+delta_z
