@@ -74,8 +74,14 @@ def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
     return telemetry_after_delta_time_pure(
         telemetry.speed, telemetry.steering, pos, rot_y, delta_time)
     
+def break_down_into_times_pure(speed, s_angle, pos, rot_y, delta_time, desired_break_down):
+    time = delta_time/desired_break_down
+    for _ in range(desired_break_down):
+        pos,rot_y = telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, time)
+        #Produce new telemetry
+    return pos,rot_y
 
-def break_down_into_times(telemetry, pos, rot_y, delta_time,desired_break_down):
+def break_down_into_times(telemetry, pos, rot_y, delta_time, desired_break_down):
     '''
     Just in case the resolution isn't good enough you good do an interpolation.
     :param telemetry:
@@ -85,9 +91,6 @@ def break_down_into_times(telemetry, pos, rot_y, delta_time,desired_break_down):
     :param desired_break_down:
     :return:
     '''
-    time = delta_time/desired_break_down
-    for _ in range(desired_break_down):
-
-        pos,rot_y = telemetry_after_delta_time(telemetry, pos, rot_y, time)
-        #Produce new telemetry
-    return pos,rot_y
+    return break_down_into_times_pure(telemetry.speed, telemetry.steering, 
+        telemetry, pos, rot_y, delta_time, desired_break_down)
+    

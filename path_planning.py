@@ -259,6 +259,7 @@ CHILD_SAFETY_ADDER = 0
 CHILD_SAFETY_MULTIPLIER = 1.2
 CHANGE_LIMIT = 10
 CHANGE_INTVL = 2
+NUM_BREAK_DOWNS = 5
 def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, change_limiter=True):
     img_x, img_z = (
             track_floor_utils.img_point_bottom_left_to_top_left(
@@ -281,8 +282,8 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, ch
         possible_angles = range(-MAX_STEERING, MAX_STEERING + 1, STEERING_ACTION_INCREMENTS)
 
     children_generator = (
-        (prediction.telemetry_after_delta_time_pure(
-            max(tel.speed, 1), s_angle, pos, rot_y, delta_time), 
+        (prediction.break_down_into_times_pure(
+            max(tel.speed, 1), s_angle, pos, rot_y, delta_time, NUM_BREAK_DOWNS), 
          s_angle)
         for s_angle in possible_angles)
     best_angle = None
