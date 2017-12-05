@@ -93,7 +93,7 @@ def telemetry_after_delta_time2(telemetry, pos, rot_y, delta_time):
     delta_z = -delta_z*math.sin(rot_y)+delta_z*math.cos(rot_y)
     x = x+delta_x
     z = z+delta_z
-    car_pos = (x,z)
+    car_pos = (z,x)
     new_angle = np.rad2deg(rot_y+phi)
     return(tuple(car_pos),np.rad2deg(rot_y))
 
