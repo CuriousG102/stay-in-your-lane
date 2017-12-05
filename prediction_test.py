@@ -21,7 +21,7 @@ class TelemetryAfterDeltaTimeTestMixin:
 
     def test_works(self):
         t = FakeTelemetry(self.speed, self.s_angle)
-        pos, rot_y = prediction.telemetry_after_delta_time(
+        pos, rot_y = prediction.telemetry_after_delta_time2(
             t, self.pos, self.rot_y, self.delta_time)
         self.assertAlmostEqual(
             pos[0], self.expected_pos_prediction[0],

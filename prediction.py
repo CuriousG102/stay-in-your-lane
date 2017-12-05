@@ -70,6 +70,35 @@ def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
     return (tuple(car_pos),
             np.rad2deg(fin_rot_y))
 
+
+def telemetry_after_delta_time2(telemetry, pos, rot_y, delta_time):
+    t = telemetry
+    x, z = pos
+    rot_y = math.radians(rot_y)
+    s_angle = math.radians(t.steering)
+    speed = t.speed
+    d = -CAR_AXLE_BACK + CAR_AXLE_FRONT
+    if s_angle>.01: #You're going in a straight line otherwise
+        R = d*math.tan(math.pi-s_angle)
+    else:
+        car_pos = (z+speed*math.sin(rot_y),x+speed*math.cos(rot_y))
+        return(tuple(car_pos),np.rad2deg(rot_y))
+    phi = speed*delta_time/R
+    delta_x = R-R*math.cos(phi)
+    delta_z = R*math.sin(phi)
+    if s_angle>0:
+        delta_x = -delta_x
+
+    delta_x = delta_x*math.cos(rot_y) + delta_y*math.sin(rot_y)
+    delta_z = -delta_z*math.sin(rot_y)+delta_z*math.cos(rot_y)
+    x = x+delta_x
+    z = z+delta_z
+    car_pos = (x,z)
+    new_angle = np.rad2deg(rot_y+phi)
+    return(tuple(car_pos),np.rad2deg(rot_y))
+
+
+
 def break_down_into_times(telemetry, pos, rot_y, delta_time,desired_break_down):
     '''
     Just in case the resolution isn't good enough you good do an interpolation.
