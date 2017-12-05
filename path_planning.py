@@ -252,10 +252,9 @@ def get_steering_angle_greedy(tel, pos, rot_y, delta_time):
     return best_angle
 
 
-SAFETY_MARGIN = 60
-SAFETY_ADDER = 200
+SAFETY_MARGIN = 100
 CHILD_SAFETY_ADDER = 200
-CHANGE_LIMIT = 6
+CHANGE_LIMIT = 8
 CHANGE_INTVL = 2
 def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, change_limiter=True):
     img_x, img_z = (
@@ -268,13 +267,8 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, ch
     t_val = TRACK_FLOOR_DISTANCE[int(img_z), int(img_x)]
     if t_val == OFF_TRACK_VALUE or t_val == MAX_DIST_VALUE:
         return (None, float('+inf'))
-    safety_box = TRACK_FLOOR_DISTANCE[int(img_z - SAFETY_MARGIN):int(img_z + SAFETY_MARGIN),
-                                      int(img_x - SAFETY_MARGIN):int(img_x + SAFETY_MARGIN)]
-    safety_adder = 0
-    if OFF_TRACK_VALUE in safety_box or MAX_DIST_VALUE in safety_box:
-        safety_adder = SAFETY_ADDER
     if (h == 0):
-        return (None, safety_adder + t_val)
+        return (None, t_val)
 
     if change_limiter:
         possible_angles = range(max(-MAX_STEERING, int(tel.steering) - CHANGE_LIMIT), 
@@ -299,8 +293,9 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, h, ch
             int(child_img_z - SAFETY_MARGIN):int(child_img_z + SAFETY_MARGIN),
             int(child_img_x - SAFETY_MARGIN):int(child_img_x + SAFETY_MARGIN)]
         child_safety_adder = 0
-        if OFF_TRACK_VALUE in safety_box or MAX_DIST_VALUE in child_safety_box:
+        if OFF_TRACK_VALUE in child_safety_box or MAX_DIST_VALUE in child_safety_box:
             child_safety_adder = CHILD_SAFETY_ADDER
+            print('Child Safety First!')
         future_t_val = child_safety_adder + get_steering_angle_limited_horizon_helper(tel, child_pos, child_rot_y, delta_time, h - 1)[1]
         # keep it from trying to hop the track ...
         # we can do this more elegantly in the future by looking 
