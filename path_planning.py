@@ -410,12 +410,12 @@ def drive_loop(s):
                 pass
             else:
                 s_angle = get_steering_angle_limited_horizon(
-                    t, pos, rot_y, .25, 1.8, 3,
+                    t, pos, rot_y, .5, 1.0, 3,
                 TRACK_FLOOR_DISTANCE_EDGE_DECAY)
             if s_angle is None:
                 print('\n\n!!!!!!!Fallback precision!!!!!!!\n\n')
                 s_angle = get_steering_angle_limited_horizon(
-                    t, pos, rot_y, .25, 1.3, 4,
+                    t, pos, rot_y, .5, 1.0, 4,
                 TRACK_FLOOR_DISTANCE_EDGE_DECAY)
                 if s_angle is None:
                     print('No path forward')
