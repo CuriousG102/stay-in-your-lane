@@ -21,27 +21,32 @@ OFF_TRACK_VALUE = np.iinfo(np.int32).min
 MAX_DIST_VALUE = np.iinfo(np.int32).max
 FINISH_LINE_VALUE = OFF_TRACK_VALUE + 1
 TRACK_FLOOR_DISTANCE = None 
+TRACK_FLOOR_DISTANCE_EDGE_DECAY = None
+# for deubgging
+TRACK_FLOOR_EDGE_PRECURSOR = None
 MIN_DIST_COLOR, MAX_DIST_COLOR = 255, 30
 
 PICKLE_FILE_NAME = 'pickle_dist'
+PICKLE_EDGE_FILE_NAME = 'pickled_edge_dist'
 
-def get_track_floor_visual():
-    track_img = np.zeros(TRACK_FLOOR_DISTANCE.shape + (3,), dtype=np.uint8)
+def get_track_floor_visual(in_arg):
+    track_img = np.zeros(in_arg.shape + (3,), dtype=np.uint8)
     # make non-points red
     track_img[:, :, 2] = (255 * 
-        (TRACK_FLOOR_DISTANCE == OFF_TRACK_VALUE).astype(np.uint8))
+        (in_arg == OFF_TRACK_VALUE).astype(np.uint8))
     # make finish line blue
     track_img[:, :, 0] = (255 * 
-        (TRACK_FLOOR_DISTANCE == FINISH_LINE_VALUE).astype(np.uint8))
+        (in_arg == FINISH_LINE_VALUE).astype(np.uint8))
     
     dist_points_selector = (
-        (TRACK_FLOOR_DISTANCE != OFF_TRACK_VALUE)
-        & (TRACK_FLOOR_DISTANCE != MAX_DIST_VALUE)
-        & (TRACK_FLOOR_DISTANCE != FINISH_LINE_VALUE))
+        (in_arg != OFF_TRACK_VALUE)
+        & (in_arg != MAX_DIST_VALUE)
+        & (in_arg != FINISH_LINE_VALUE))
     track_floor_distances_only = (
-        (TRACK_FLOOR_DISTANCE * dist_points_selector).astype(np.float64))
+        (in_arg * dist_points_selector).astype(np.float64))
     min_dist, max_dist = (
         track_floor_distances_only.min(), track_floor_distances_only.max())
+    print(min_dist, max_dist)
     dist_slope = (MIN_DIST_COLOR - MAX_DIST_COLOR) / (min_dist - max_dist)
     dist_intercept = MIN_DIST_COLOR
     track_floor_distances_only *= dist_slope
@@ -113,8 +118,8 @@ def _initialize_track_floor_distance():
             t_i_mask, np.ones((3,3)))
         t_i_dilation &= ~(
             (TRACK_FLOOR_DISTANCE == OFF_TRACK_VALUE)
-            | (TRACK_FLOOR_DISTANCE == FINISH_LINE_VALUE)
-            | (TRACK_FLOOR_DISTANCE <= i))
+             | (TRACK_FLOOR_DISTANCE == FINISH_LINE_VALUE)
+             | (TRACK_FLOOR_DISTANCE <= i))
         TRACK_FLOOR_DISTANCE *= ~t_i_dilation
         TRACK_FLOOR_DISTANCE += (i + 1) * t_i_dilation.astype(np.int32)
 
@@ -122,6 +127,78 @@ def _initialize_track_floor_distance():
         pickle.dump((hash_of_precursor, TRACK_FLOOR_DISTANCE), f)
 
 _initialize_track_floor_distance()
+
+
+DECAY_ADD = 500
+DECAY_RATE = 0.993
+def _initialize_track_floor_distance_edge_decay():
+    # set distances for all that aren't known to what is 
+    # effectively +infinity
+    global TRACK_FLOOR_DISTANCE_EDGE_DECAY
+    global TRACK_FLOOR_EDGE_PRECURSOR
+    hash_of_precursor = hash(
+        (TRACK_FLOOR_DISTANCE.tostring(), DECAY_ADD, DECAY_RATE))
+    if os.path.exists(PICKLE_EDGE_FILE_NAME):
+        with open(PICKLE_EDGE_FILE_NAME, 'rb') as f:
+            hash_of_pickle_precursor, pickled_dist_matrix = pickle.load(f)
+            if hash_of_precursor == hash_of_pickle_precursor:
+                TRACK_FLOOR_DISTANCE_EDGE_DECAY = pickled_dist_matrix
+                return
+    print('Have to build dist decay matrix for path_planning. '
+          'This will take a while, '
+          'but only has to run when the temp file is not present or when the '
+          'precursors to the dist decay distance matrix change.')
+
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY = np.zeros_like(TRACK_FLOOR_DISTANCE)
+    # we don't want to decay values around the finish line or modify
+    # finish line value
+    track_floor_distance_mask = TRACK_FLOOR_DISTANCE != OFF_TRACK_VALUE
+    finish_line_mask = TRACK_FLOOR_DISTANCE == FINISH_LINE_VALUE
+
+    track_floor_starter_dilation = ndimage.morphology.binary_dilation(
+        ~track_floor_distance_mask, np.ones((3,3)))
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY += (
+        track_floor_starter_dilation 
+        & track_floor_distance_mask 
+        & ~finish_line_mask)
+    for i in range(1, 9999999999):
+        print(i)
+        current_propagation_mask = TRACK_FLOOR_DISTANCE_EDGE_DECAY == i
+        if not current_propagation_mask.any():
+            break
+        dilation = ndimage.morphology.binary_dilation(
+            current_propagation_mask, np.ones((3,3)))
+        dilation &= (
+            track_floor_distance_mask # is in track
+            # and is not an already filled in value
+            & ~((TRACK_FLOOR_DISTANCE_EDGE_DECAY >= 1) 
+                & (TRACK_FLOOR_DISTANCE_EDGE_DECAY <= i))
+            & ~finish_line_mask) # and is not finish line 
+        TRACK_FLOOR_DISTANCE_EDGE_DECAY += (i + 1) * dilation.astype(np.int32)
+
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY = ((
+        DECAY_ADD * DECAY_RATE ** TRACK_FLOOR_DISTANCE_EDGE_DECAY) 
+    * track_floor_distance_mask * ~finish_line_mask)
+
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY = (
+        TRACK_FLOOR_DISTANCE_EDGE_DECAY.astype(np.int32))
+
+    TRACK_FLOOR_EDGE_PRECURSOR = (
+        TRACK_FLOOR_DISTANCE 
+        * (~(track_floor_distance_mask) | finish_line_mask)
+        + TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY += TRACK_FLOOR_DISTANCE
+
+    # We have to correct integer overflows...
+    max_dist_mask = TRACK_FLOOR_DISTANCE == MAX_DIST_VALUE
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY *= ~max_dist_mask
+    TRACK_FLOOR_DISTANCE_EDGE_DECAY += (max_dist_mask.astype(np.int32) * MAX_DIST_VALUE)
+
+    with open(PICKLE_EDGE_FILE_NAME, 'wb') as f:
+        pickle.dump((hash_of_precursor, TRACK_FLOOR_DISTANCE_EDGE_DECAY), f)
+
+_initialize_track_floor_distance_edge_decay()
 
 # track_max_dist = None
 # def heuristic_cost(position, speed):
@@ -252,7 +329,7 @@ def get_steering_angle_greedy(tel, pos, rot_y, delta_time):
     return best_angle
 
 
-SAFETY_MARGIN = 60
+SAFETY_MARGIN = 30
 T_MARGIN = 5
 assert(T_MARGIN < SAFETY_MARGIN)
 CHILD_SAFETY_ADDER = 0
@@ -260,15 +337,15 @@ CHILD_SAFETY_MULTIPLIER = 1.3
 CHANGE_LIMIT = 10
 CHANGE_INTVL = 2
 NUM_BREAK_DOWNS = 10
-def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, change_limiter=True):
+def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix, change_limiter=True):
     img_x, img_z = (
             track_floor_utils.img_point_bottom_left_to_top_left(
                 track_floor_utils.unity_plane_point_to_img_point(pos)))
-    track_floor_height, track_floor_width = TRACK_FLOOR_DISTANCE.shape
+    track_floor_height, track_floor_width = dist_matrix.shape
     if (img_x - SAFETY_MARGIN < 0 or img_x + SAFETY_MARGIN >= track_floor_width or 
         img_z - SAFETY_MARGIN < 0 or img_z + SAFETY_MARGIN >= track_floor_height):
         return (None, float('+inf'))
-    t_val = TRACK_FLOOR_DISTANCE[int(img_z), int(img_x)]
+    t_val = dist_matrix[int(img_z), int(img_x)]
     if t_val == OFF_TRACK_VALUE or t_val == MAX_DIST_VALUE:
         return (None, float('+inf'))
     if (h == 0):
@@ -293,7 +370,7 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
         child_img_x, child_img_z = (
             track_floor_utils.img_point_bottom_left_to_top_left(
                 track_floor_utils.unity_plane_point_to_img_point(pos)))
-        child_safety_box = TRACK_FLOOR_DISTANCE[
+        child_safety_box = dist_matrix[
             int(child_img_z - SAFETY_MARGIN):int(child_img_z + SAFETY_MARGIN),
             int(child_img_x - SAFETY_MARGIN):int(child_img_x + SAFETY_MARGIN)]
         child_safety_adder = 0
@@ -301,13 +378,13 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
         if OFF_TRACK_VALUE in child_safety_box or MAX_DIST_VALUE in child_safety_box:
             child_safety_adder = CHILD_SAFETY_ADDER
             child_safety_mult = CHILD_SAFETY_MULTIPLIER
-            # print('Child Safety First!')
+            print('Child Safety First!')
         future_t_val = (
             child_safety_adder 
             + child_safety_mult * get_steering_angle_limited_horizon_helper(
                 tel, child_pos, child_rot_y, 
                 delta_time * projection_multiplier, 
-                projection_multiplier, h - 1)[1])
+                projection_multiplier, h - 1, dist_matrix)[1])
         # keep it from trying to hop the track ...
         # we can do this more elegantly in the future by looking 
         # at the trajectory and seeing if it crosses any areas marked
@@ -320,5 +397,5 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
 
     return (best_angle, best_t_val)
 
-def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_multiplier, h):
-    return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h)[0]
+def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix):
+    return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix)[0]
