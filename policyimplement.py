@@ -17,7 +17,7 @@ import math
 
 def choose_action(Q_row, er):
     action = 0
-    actions = np.array([-1,-.66, -.33, 0, .33, .66])
+    actions = np.array([-.5, -.33, 0, .33, .5])
     ep_random=er
     if random.random() < ep_random:
         action=randint(0, len(actions)-1)
@@ -168,6 +168,7 @@ def main():
     # Adjust to represent the states
     STATE_BOUNDS = np.array([20, 7, 4, 2, 1.5, 0])
     REWARDS = np.array([-5, -4, -3, -2, 5, 10, 5, -2, -3, -4, -5])
+    actions=[-.66, -.33, 0, .33, .66]
     goal_state = 2
     NUM_states = (STATE_BOUNDS.size )*2-1
     NUM_actions = 5  # left right or none
@@ -189,7 +190,6 @@ def main():
     learning_rate=.5
     MIN_EXPLORE_RATE=0
     discount_factor=.5
-    best_q=0
 
 
     average_slope_array=[]
@@ -205,6 +205,8 @@ def main():
     g = open('moves.txt', 'wb')
     #qtable = open('Qtable.txt', 'wb')
     # Q=np.load(outfile) Uncomment for 
+    #state_action=[0,0,2, 0, 1, 2, 2,3, 2, 4,0]
+    state_action=[0,0,1, 1, 2, 2, 2,3, 3, 4,4]
 
 
 
@@ -288,38 +290,26 @@ def main():
                 state=0
             print("State: " + str(state))
 
-            if(observation.colliding == True or lines == None):
-                Q[prev_state, act_index] += learning_rate*(-10 + discount_factor*(best_q) - Q[prev_state,act_index])
-                break
-            if(observation.finished == True):
-                Q[prev_state, act_index] += learning_rate*(1000 + discount_factor*(best_q) - Q[prev_state,act_index])
-                break
+            #if(observation.colliding == True or lines == None):
+                #Q[prev_state, act_index] += learning_rate*(-10 + discount_factor*(best_q) - Q[prev_state,act_index])
+                #break
+            #if(observation.finished == True):
+                #Q[prev_state, act_index] += learning_rate*(1000 + discount_factor*(best_q) - Q[prev_state,act_index])
+                #break
 
             print(control_time)
             if (control_time > control_step):
-                average_slope_interval=np.sum(average_slope_array)/len(average_slope_array)
-                average_slope_interval=round(average_slope_interval,2)
-                if average_slope_interval:
-                    state=determine_state(average_slope_interval,STATE_BOUNDS)
                 reward=REWARDS[state-1]
-                #update reward based on previous action taken
-                best_q = np.amax(Q[state-1])
-                Q[prev_state, act_index] += learning_rate*(reward + discount_factor*(best_q) - Q[prev_state,act_index])
-                print(Q)
                 control_time=0
-                average_slope_array=[]
-                action,act_index=choose_action(Q[state,:], er)
-                #print(action)
-                s.send_instructions(action, constant_throttle)
-                prev_action=act_index
-                prev_state=state
-                np.savetxt(g,[episode, t, state, action, average_slope_interval ,reward, prev_action, prev_state ],newline=" " )
-                np.save("qtable",Q)
-                g.write(b'\n')
+                action=state_action[state]
+                s.send_instructions(actions[action], constant_throttle)
+                #np.savetxt(g,[episode, t, state, action, average_slope_interval ,reward, prev_action, prev_state ],newline=" " )
+                #np.save("qtable",Q)
+                #g.write(b'\n')
 
             else:
                 # Increment the sim without action
-                s.send_instructions(action, constant_throttle)
+                s.send_instructions(actions[action], constant_throttle)
             #print(t)
             #print(observation)
             #print(episode)
@@ -336,6 +326,7 @@ def main():
             state = next_state
             control_time += observation.delta_time
             t += observation.delta_time
+        
         #s.get_telemetry()
         s.reset_instruction()
     g.close()
