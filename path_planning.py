@@ -329,11 +329,6 @@ def get_steering_angle_greedy(tel, pos, rot_y, delta_time):
     return best_angle
 
 
-SAFETY_MARGIN = 30
-T_MARGIN = 5
-assert(T_MARGIN < SAFETY_MARGIN)
-CHILD_SAFETY_ADDER = 0
-CHILD_SAFETY_MULTIPLIER = 1.3
 CHANGE_LIMIT = 10
 CHANGE_INTVL = 2
 NUM_BREAK_DOWNS = 10
@@ -342,8 +337,8 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
             track_floor_utils.img_point_bottom_left_to_top_left(
                 track_floor_utils.unity_plane_point_to_img_point(pos)))
     track_floor_height, track_floor_width = dist_matrix.shape
-    if (img_x - SAFETY_MARGIN < 0 or img_x + SAFETY_MARGIN >= track_floor_width or 
-        img_z - SAFETY_MARGIN < 0 or img_z + SAFETY_MARGIN >= track_floor_height):
+    if (img_x < 0 or img_x >= track_floor_width or 
+        img_z < 0 or img_z >= track_floor_height):
         return (None, float('+inf'))
     t_val = dist_matrix[int(img_z), int(img_x)]
     if t_val == OFF_TRACK_VALUE or t_val == MAX_DIST_VALUE:
@@ -370,18 +365,8 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
         child_img_x, child_img_z = (
             track_floor_utils.img_point_bottom_left_to_top_left(
                 track_floor_utils.unity_plane_point_to_img_point(pos)))
-        child_safety_box = dist_matrix[
-            int(child_img_z - SAFETY_MARGIN):int(child_img_z + SAFETY_MARGIN),
-            int(child_img_x - SAFETY_MARGIN):int(child_img_x + SAFETY_MARGIN)]
-        child_safety_adder = 0
-        child_safety_mult = 1
-        if OFF_TRACK_VALUE in child_safety_box or MAX_DIST_VALUE in child_safety_box:
-            child_safety_adder = CHILD_SAFETY_ADDER
-            child_safety_mult = CHILD_SAFETY_MULTIPLIER
-            print('Child Safety First!')
         future_t_val = (
-            child_safety_adder 
-            + child_safety_mult * get_steering_angle_limited_horizon_helper(
+            get_steering_angle_limited_horizon_helper(
                 tel, child_pos, child_rot_y, 
                 delta_time * projection_multiplier, 
                 projection_multiplier, h - 1, dist_matrix)[1])
@@ -399,3 +384,46 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
 
 def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix):
     return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix)[0]
+
+def drive_loop(s):
+    EVERY_DELTA = 0.25
+    THROTTLE = 0.2
+    elapsed_time = 0
+    current_steering = 0
+    while True:
+        t = s.get_telemetry()
+        if t.finished:
+            print('VICTORY')
+            s.reset_instruction()
+            continue
+        elapsed_time += t.delta_time
+        if elapsed_time >= EVERY_DELTA:
+            elapsed_time = 0
+            pos = t.x, t.z
+            rot_y = t.rot_y
+            #if abs(t.steering) > 12:
+            #    print('\n\n!!!!!!!HIGH STEERING FALLBACK!!!!!!!')
+            #    s_angle = get_steering_angle_limited_horizon(
+            #        t, pos, rot_y, .25, 1.8, 4,
+            #    TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+            if False:
+                pass
+            else:
+                s_angle = get_steering_angle_limited_horizon(
+                    t, pos, rot_y, .25, 1.8, 3,
+                TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+            if s_angle is None:
+                print('\n\n!!!!!!!Fallback precision!!!!!!!\n\n')
+                s_angle = get_steering_angle_limited_horizon(
+                    t, pos, rot_y, .25, 1.3, 4,
+                TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+                if s_angle is None:
+                    print('No path forward')
+                    s.reset_instruction()
+                    continue
+            current_steering = 0.0 * current_steering +  1.0 * (s_angle / 25)
+            print('T at decision: ', t)
+            print('New steering: ', current_steering)
+            print('Recommended s_angle: ', s_angle)
+        
+        s.send_instructions(current_steering, THROTTLE)
