@@ -66,9 +66,9 @@ def _initialize_track_floor_distance():
     if os.path.exists(PICKLE_FILE_NAME):
         with open(PICKLE_FILE_NAME, 'rb') as f:
             hash_of_pickle_precursor, pickled_dist_matrix = pickle.load(f)
-            if hash_of_precursor == hash_of_pickle_precursor:
-                TRACK_FLOOR_DISTANCE = pickled_dist_matrix
-                return
+            # if hash_of_precursor == hash_of_pickle_precursor:
+            TRACK_FLOOR_DISTANCE = pickled_dist_matrix
+            return
 
     print('Have to build dist matrix for path_planning. This will take a while, '
           'but only has to run when the temp file is not present or when the '
@@ -123,7 +123,7 @@ def _initialize_track_floor_distance():
         TRACK_FLOOR_DISTANCE *= ~t_i_dilation
         TRACK_FLOOR_DISTANCE += (i + 1) * t_i_dilation.astype(np.int32)
 
-    with open('pickle_dist', 'wb') as f:
+    with open(PICKLE_FILE_NAME, 'wb') as f:
         pickle.dump((hash_of_precursor, TRACK_FLOOR_DISTANCE), f)
 
 _initialize_track_floor_distance()
@@ -141,9 +141,9 @@ def _initialize_track_floor_distance_edge_decay():
     if os.path.exists(PICKLE_EDGE_FILE_NAME):
         with open(PICKLE_EDGE_FILE_NAME, 'rb') as f:
             hash_of_pickle_precursor, pickled_dist_matrix = pickle.load(f)
-            if hash_of_precursor == hash_of_pickle_precursor:
-                TRACK_FLOOR_DISTANCE_EDGE_DECAY = pickled_dist_matrix
-                return
+            # if hash_of_precursor == hash_of_pickle_precursor:
+            TRACK_FLOOR_DISTANCE_EDGE_DECAY = pickled_dist_matrix
+            return
     print('Have to build dist decay matrix for path_planning. '
           'This will take a while, '
           'but only has to run when the temp file is not present or when the '
@@ -386,7 +386,7 @@ def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_m
     return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix)[0]
 
 def drive_loop(s):
-    EVERY_DELTA = 0.25
+    EVERY_DELTA = 0.12
     THROTTLE = 1
     elapsed_time = 0
     current_steering = 0
