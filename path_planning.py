@@ -355,7 +355,7 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
 
     children_generator = (
         (prediction.break_down_into_times_pure(
-            max(tel.speed, .1), s_angle, pos, rot_y, delta_time, NUM_BREAK_DOWNS), 
+            max(tel.speed, 2), s_angle, pos, rot_y, delta_time, NUM_BREAK_DOWNS), 
          s_angle)
         for s_angle in possible_angles)
     best_angle = None
@@ -387,7 +387,7 @@ def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_m
 
 def drive_loop(s):
     EVERY_DELTA = 0.25
-    THROTTLE = 0.75
+    THROTTLE = 1
     elapsed_time = 0
     current_steering = 0
     while True:
@@ -410,12 +410,12 @@ def drive_loop(s):
                 pass
             else:
                 s_angle = get_steering_angle_limited_horizon(
-                    t, pos, rot_y, .25, 1.0, 3,
+                    t, pos, rot_y, .2, 1.0, 3,
                 TRACK_FLOOR_DISTANCE_EDGE_DECAY)
             if s_angle is None:
                 print('\n\n!!!!!!!Fallback precision!!!!!!!\n\n')
                 s_angle = get_steering_angle_limited_horizon(
-                    t, pos, rot_y, .15, 1.0, 4,
+                    t, pos, rot_y, .1, 1.0, 4,
                 TRACK_FLOOR_DISTANCE_EDGE_DECAY)
                 if s_angle is None:
                     print('No path forward')
