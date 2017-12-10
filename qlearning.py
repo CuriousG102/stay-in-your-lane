@@ -17,7 +17,7 @@ import math
 
 def choose_action(Q_row, er):
     action = 0
-    actions = np.array([-1,-.66, -.33, 0, .33, .66])
+    actions = np.array([-1,-.6, -.33, 0, .33, .6, 1])
     ep_random=er
     if random.random() < ep_random:
         action=randint(0, len(actions)-1)
@@ -43,10 +43,9 @@ def average_slope_intercept(lines):
             left_lines.append((slope, intercept))
             left_weights.append((length))
     # add more weight to longer lines    
-    left_lane  = np.dot(left_weights,  left_lines) /np.sum(left_weights)  if len(left_weights) >0 else None
+    lane  = np.dot(left_weights,  left_lines) /np.sum(left_weights)  if len(left_weights) >0 else None
     #right_lane = np.dot(right_weights, right_lines)/np.sum(right_weights) if len(right_weights)>0 else None
-    
-    return left_lane # (slope, intercept), (slope, intercept)
+    return lane # (slope, intercept), (slope, intercept)
 
 def make_line_points(y1, y2, line):
     """
@@ -108,6 +107,7 @@ def draw_lane_lines(image, line, color=[255, 0, 0], thickness=20):
     line_image = np.zeros_like(image)
     if line is not None:
         #print(*line)
+        #print(line_image, *line,  color, thickness)
         cv2.line(line_image, *line,  color, thickness)
     # image1 * α + image2 * β + λ
     # image1 and image2 must be the same shape.
@@ -160,17 +160,16 @@ def ROI(image):
 
 def get_explore_rate(ep):
     MIN_EXPLORE_RATE=.1
-    return max(MIN_EXPLORE_RATE, min(1.0, 1.0 - math.log10((ep+1.)/25)))
+    return max(MIN_EXPLORE_RATE, min(1.0, 1.0 - math.log10((ep+1.)/100)))
 
 def main():
 
     # hardcode number of actions
     # Adjust to represent the states
-    STATE_BOUNDS = np.array([20, 7, 4, 2, 1.5, 0])
+    STATE_BOUNDS = np.array([20, 4, 3, 2, 1.5, 0])
     REWARDS = np.array([-5, -4, -3, -2, 5, 10, 5, -2, -3, -4, -5])
-    goal_state = 2
     NUM_states = (STATE_BOUNDS.size )*2-1
-    NUM_actions = 5  # left right or none
+    NUM_actions = 7  # left right or none
     episode_number = 500
     t_max = 60
     y = .95
@@ -218,16 +217,17 @@ def main():
         state = 0
         next_state = 0
         current_steering = 0
-        constant_throttle = .75
+        constant_throttle = .5
         control_time = 0
         t = 0
         # Reset Episode
 
         flag = 0
         er=get_explore_rate(episode)
+        print("Explore Rate:" + str(er))
         prev_action=2
         prev_state=4
-        act_index=0
+        #act_index=0
         reward=0
         # time.sleep(.5)
 
@@ -289,7 +289,7 @@ def main():
             print("State: " + str(state))
 
             if(observation.colliding == True or lines == None):
-                Q[prev_state, act_index] += learning_rate*(-10 + discount_factor*(best_q) - Q[prev_state,act_index])
+                Q[prev_state, act_index] += learning_rate*(-2 + discount_factor*(best_q) - Q[prev_state,act_index])
                 break
             if(observation.finished == True):
                 Q[prev_state, act_index] += learning_rate*(1000 + discount_factor*(best_q) - Q[prev_state,act_index])
@@ -313,6 +313,12 @@ def main():
                 s.send_instructions(action, constant_throttle)
                 prev_action=act_index
                 prev_state=state
+                
+                print("state: " +str(state))
+                print("action: " +str(action))
+                print("action_index: " +str(act_index))
+                print("reward: " +str(reward))
+
                 np.savetxt(g,[episode, t, state, action, average_slope_interval ,reward, prev_action, prev_state ],newline=" " )
                 np.save("qtable",Q)
                 g.write(b'\n')
@@ -320,7 +326,7 @@ def main():
             else:
                 # Increment the sim without action
                 s.send_instructions(action, constant_throttle)
-            #print(t)
+            print("Time:" + str(t))
             #print(observation)
             #print(episode)
             print(" average_slope: " + str(average_slope))
