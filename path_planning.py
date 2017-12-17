@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from scipy import ndimage
 
+import particle_filter
 import prediction
 import track_floor_utils 
 
@@ -338,7 +339,8 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
                 track_floor_utils.unity_plane_point_to_img_point(pos)))
     track_floor_height, track_floor_width = dist_matrix.shape
     if (img_x < 0 or img_x >= track_floor_width or 
-        img_z < 0 or img_z >= track_floor_height):
+        img_z < 0 or img_z >= track_floor_height or 
+        np.isnan(img_x) or np.isnan(img_z)):
         return (None, float('+inf'))
     t_val = dist_matrix[int(img_z), int(img_x)]
     if t_val == OFF_TRACK_VALUE or t_val == MAX_DIST_VALUE:
@@ -385,16 +387,22 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
 def get_steering_angle_limited_horizon(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix):
     return get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, projection_multiplier, h, dist_matrix)[0]
 
-def drive_loop(s):
+def drive_loop(s, times):
     EVERY_DELTA = 0.12
     THROTTLE = 1
     elapsed_time = 0
     current_steering = 0
+
+    curr_time = 0
     while True:
         t = s.get_telemetry()
+        curr_time += t.delta_time
         if t.finished:
-            print('VICTORY')
+            print('VICTORY in {0} seconds'.format(
+                curr_time))
             s.reset_instruction()
+            times.append(curr_time)
+            curr_time = 0
             continue
         elapsed_time += t.delta_time
         if elapsed_time >= EVERY_DELTA:
@@ -420,9 +428,72 @@ def drive_loop(s):
                 if s_angle is None:
                     print('No path forward')
                     s.reset_instruction()
+                    curr_time = 0
                     continue
             current_steering = 0.0 * current_steering +  1.0 * (s_angle / 25)
             print('T at decision: ', t)
+            print('New steering: ', current_steering)
+            print('Recommended s_angle: ', s_angle)
+        
+        s.send_instructions(current_steering, THROTTLE)
+
+def drive_loop_p_filter(s, times):
+    EVERY_DELTA = 0.12
+    THROTTLE = 1
+    elapsed_time = 0
+    current_steering = 0
+
+    curr_time = 0
+    p_filter = None
+    while True:
+        t = s.get_telemetry()
+        if p_filter is None:
+            p_filter = particle_filter.ParticleFilter(
+                [(particle_filter.Particle(t, (t.x, t.z), t.rot_y), 1)],
+                None)
+        curr_time += t.delta_time
+        elapsed_time += t.delta_time
+        if t.finished:
+            print('VICTORY in {0} seconds'.format(
+                curr_time))
+            s.reset_instruction()
+            times.append(curr_time)
+            curr_time = 0
+            elapsed_time = 0
+            p_filter = None
+            continue
+        if elapsed_time >= EVERY_DELTA:
+            p_filter.update_filter(t, elapsed_time)
+            elapsed_time = 0
+            pos, rot_y = p_filter.get_mle()
+
+            #if abs(t.steering) > 12:
+            #    print('\n\n!!!!!!!HIGH STEERING FALLBACK!!!!!!!')
+            #    s_angle = get_steering_angle_limited_horizon(
+            #        t, pos, rot_y, .25, 1.8, 4,
+            #    TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+            if False:
+                pass
+            else:
+                s_angle = get_steering_angle_limited_horizon(
+                    t, pos, rot_y, .2, 1.0, 3,
+                TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+            if s_angle is None:
+                print('\n\n!!!!!!!Fallback precision!!!!!!!\n\n')
+                s_angle = get_steering_angle_limited_horizon(
+                    t, pos, rot_y, .1, 1.0, 4,
+                TRACK_FLOOR_DISTANCE_EDGE_DECAY)
+                if s_angle is None:
+                    print('No path forward')
+                    s.reset_instruction()
+                    curr_time = 0
+                    elapsed_time = 0
+                    p_filter = None
+                    continue
+            current_steering = 0.0 * current_steering +  1.0 * (s_angle / 25)
+            print('T at decision: ', t)
+            print('Est Pos: {0}\nEst Rot Y: {1}\n'.format(
+                pos, rot_y))
             print('New steering: ', current_steering)
             print('Recommended s_angle: ', s_angle)
         
