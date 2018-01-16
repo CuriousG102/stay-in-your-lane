@@ -356,8 +356,8 @@ def get_steering_angle_limited_horizon_helper(tel, pos, rot_y, delta_time, proje
         possible_angles = range(-MAX_STEERING, MAX_STEERING + 1, STEERING_ACTION_INCREMENTS)
 
     children_generator = (
-        (prediction.break_down_into_times_pure(
-            max(tel.speed, 2), s_angle, pos, rot_y, delta_time, NUM_BREAK_DOWNS), 
+        (prediction.telemetry_after_delta_time_pure(
+            max(tel.speed, 2), s_angle, pos, rot_y, delta_time), 
          s_angle)
         for s_angle in possible_angles)
     best_angle = None
