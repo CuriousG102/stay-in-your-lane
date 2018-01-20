@@ -76,9 +76,10 @@ def pos_in_track(position):
     return TRACK_FLOOR_FILLED[top_left_point]
 
 def get_car_view_box_center_pos(position, rotation):
-    get_plane_points = lambda c, r, n: (c[0] + r * math.cos(math.radians(n - rotation)), 
-                                        c[1] + r * math.sin(math.radians(n - rotation)))
-    return get_plane_points(position, CAM_DIST_FROM_CAR, 90)
+    x, z = position
+    rotation = math.radians(rotation)
+    return (x + CAM_DIST_FROM_CAR * math.sin(rotation),
+            z + CAM_DIST_FROM_CAR * math.cos(rotation))
 
 def get_car_view_box_points(position, rotation):
     '''
