@@ -55,11 +55,14 @@ CAR_CAM_FORWARD = CAR_SCALE * CAR_CAM_POS_RELATIVE_Z
 
 CAR_CAM_ROTATION_X = 15  # degrees off of level, towards ground
 
+# want to capture .7 of image based on simulated drive
+CAR_CAM_TOP_ANGLE = CAR_CAM_ROTATION_X - 12
+
 L_MIN = (
     CAR_CAM_HEIGHT 
     / math.tan(math.radians(CAR_CAM_ROTATION_X) 
                + math.radians(CAR_CAM_FOV) / 2))
-L_MAX = CAR_CAM_HEIGHT / math.tan(math.radians(0.25*CAR_CAM_ROTATION_X))
+L_MAX = CAR_CAM_HEIGHT / math.tan(math.radians(CAR_CAM_TOP_ANGLE))
 X_U = L_MAX * math.tan(math.radians(CAR_CAM_FOV) / 2)
 Z_U = L_MAX
 X_B = L_MIN * math.tan(math.radians(CAR_CAM_FOV) / 2)
@@ -72,6 +75,8 @@ TRACK_TO_IMG_RATIO_Z = IMG_SCALE_Z / TRACK_SCALE_Z
 
 IMG_SIZE_Z = (Z_U - Z_B) * TRACK_TO_IMG_RATIO_Z
 IMG_SIZE_X = (2 * X_U) * TRACK_TO_IMG_RATIO_X
+
+# CAR_CAM_RESOLUTION = 720
 
 IMG_VISIBLE_MASK = None
 
@@ -99,6 +104,13 @@ def _init_non_visible_mask():
     IMG_VISIBLE_MASK = ~mask
 
 _init_non_visible_mask()
+
+# Z_REMAP = None
+
+# def _init_z_remap():
+#     pass
+
+# _init_z_remap()
 
 def unity_plane_point_to_img_point(unity_point):
     '''
@@ -262,6 +274,34 @@ def get_car_view_img(position, rotation):
         TRACK_FLOOR, transform, 
         (int(IMG_SIZE_X), int(IMG_SIZE_Z)))
     return cropped_img & IMG_VISIBLE_MASK
+
+def car_img_to_top_down_perspective(car_img):
+    z_imax, x_imax, _ = car_img.shape
+    assert(z_imax == x_imax)
+    replot_img = np.zeros((int(IMG_SIZE_Z), int(IMG_SIZE_X), 3), dtype=np.uint8)
+    for z_img in range(int(z_imax*.7)):
+        z_ifrac = z_img / z_imax
+        z_plot = (
+            CAR_CAM_HEIGHT 
+            / math.tan(math.radians(CAR_CAM_ROTATION_X)
+                       + math.radians(CAR_CAM_FOV) / 2 
+                       - z_ifrac * math.radians(CAR_CAM_FOV)))
+        z_pfrac = (z_plot - L_MIN) / (L_MAX - L_MIN)
+        # print('z: ', z_pfrac)
+        assert z_pfrac >= 0, z_pfrac <= 1
+        z_w = int(IMG_SIZE_Z) - int(z_pfrac * int(IMG_SIZE_Z)) - 1
+        for x_img in range(x_imax):
+            x_ifrac = x_img / x_imax
+            x_plot = 2 * (x_ifrac - .5) * math.tan(math.radians(CAR_CAM_FOV) / 2) * z_plot
+            x_pfrac = .5 * (x_plot / X_U + 1)
+            # print('x: ', x_pfrac)
+            assert x_pfrac >= 0, x_pfrac <= 1
+            x_w = int(x_pfrac * int(IMG_SIZE_X))
+
+            print(x_w, z_w)
+            replot_img[z_w, x_w] = car_img[z_imax - z_img - 1, x_img]
+
+    return replot_img
 
 # def get_img_equality_fraction(t, cam_name, location_candidates):
     # car_img = image_utils.simple_threshold(
