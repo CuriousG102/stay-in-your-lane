@@ -28,21 +28,6 @@ CAR_ROTATION = (0, 10, 0)
 
 CAR_SCALE = 0.1
 
-# CAR_CAM_FOV = 60  # degrees 
-
-# CAR_CAM_POS_RELATIVE = (0, 19, 9)  # 19 isn't quite right as car center 
-#                                    # is slightly elevated off track, but 
-#                                    # don't think it's a big deal
-
-# CAM_VIEW_BOX_SIDE_SIZE = (         # Global scale, be careful to note that
-#     2 * CAR_SCALE * CAR_CAM_POS_RELATIVE[1] 
-#     * math.tan(math.radians(CAR_CAM_FOV / 2))) 
-
-# CORNER_DIST_FROM_CAM_CENTER = math.sqrt(2*(CAM_VIEW_BOX_SIDE_SIZE/2)**2)
-
-# # convert to global scale
-# CAM_DIST_FROM_CAR = CAR_SCALE * CAR_CAM_POS_RELATIVE[2] 
-
 CAR_CAM_FOV = 60  # degrees
 
 CAR_CAM_POS_RELATIVE_Y = 1.5
@@ -104,13 +89,6 @@ def _init_non_visible_mask():
     IMG_VISIBLE_MASK = ~mask
 
 _init_non_visible_mask()
-
-# Z_REMAP = None
-
-# def _init_z_remap():
-#     pass
-
-# _init_z_remap()
 
 def unity_plane_point_to_img_point(unity_point):
     '''
