@@ -34,7 +34,9 @@ CAR_CAM_POS_RELATIVE_Y = 1.5
 
 CAR_CAM_POS_RELATIVE_Z = 1.5
 
-CAR_CAM_HEIGHT = CAR_SCALE * CAR_CAM_POS_RELATIVE_Y
+CAR_HEIGHT = .15
+
+CAR_CAM_HEIGHT = CAR_SCALE * CAR_CAM_POS_RELATIVE_Y + CAR_HEIGHT
 
 CAR_CAM_FORWARD = CAR_SCALE * CAR_CAM_POS_RELATIVE_Z
 
@@ -61,7 +63,7 @@ TRACK_TO_IMG_RATIO_Z = IMG_SCALE_Z / TRACK_SCALE_Z
 IMG_SIZE_Z = (Z_U - Z_B) * TRACK_TO_IMG_RATIO_Z
 IMG_SIZE_X = (2 * X_U) * TRACK_TO_IMG_RATIO_X
 
-# CAR_CAM_RESOLUTION = 720
+CAR_CAM_RESOLUTION = 720
 
 IMG_VISIBLE_MASK = None
 
@@ -280,6 +282,15 @@ def car_img_to_top_down_perspective(car_img, img_portion):
             replot_img[z_w, x_w] = car_img[z_imax - z_img - 1, x_img]
 
     return replot_img
+
+# X_REMAP = None
+
+# Z_REMAP = None
+
+# def _init_remaps():
+#     z_imax, x_imax = car_img.shape
+
+# _init_remaps()
 
 # def get_img_equality_fraction(t, cam_name, location_candidates):
     # car_img = image_utils.simple_threshold(
