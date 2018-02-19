@@ -6,11 +6,11 @@ import prediction
 import track_floor_utils
 
 RADIUS_SWEEP_DISTANCE = .1
-NUM_RADIUS_SWEEPS = 4
+NUM_RADIUS_SWEEPS = 2
 SWEEP_SLICES = 6
-ROT_Y_CHANGE_INCREMENT = 5
-ROT_Y_CHANGE_BOUND = 20
-PARTICLE_NUM_CAP = 50
+ROT_Y_CHANGE_INCREMENT = 2
+ROT_Y_CHANGE_BOUND = 4
+PARTICLE_NUM_CAP = 10
 # TODO(hutson): don't just guess at your random match value. Gather data.
 RANDOM_MATCH = .3
 
