@@ -257,34 +257,6 @@ def get_car_view_img(position, rotation):
         (int(IMG_SIZE_X), int(IMG_SIZE_Z)))
     return cropped_img & IMG_VISIBLE_MASK
 
-# def car_img_to_top_down_perspective(car_img, img_portion):
-#     z_imax, x_imax, _ = car_img.shape
-#     assert(z_imax == x_imax)
-#     replot_img = np.zeros((int(IMG_SIZE_Z), int(IMG_SIZE_X), 3), dtype=np.uint8)
-#     for z_img in range(int(z_imax*img_portion)):
-#         z_ifrac = z_img / z_imax
-#         z_plot = (
-#             CAR_CAM_HEIGHT 
-#             / math.tan(math.radians(CAR_CAM_ROTATION_X)
-#                        + math.radians(CAR_CAM_FOV) / 2 
-#                        - z_ifrac * math.radians(CAR_CAM_FOV)))
-#         z_pfrac = (z_plot - L_MIN) / (L_MAX - L_MIN)
-#         # print('z: ', z_pfrac)
-#         # assert z_pfrac >= 0, z_pfrac <= 1
-#         z_w = int(IMG_SIZE_Z) - int(z_pfrac * int(IMG_SIZE_Z)) - 1
-#         for x_img in range(x_imax):
-#             x_ifrac = x_img / x_imax
-#             x_plot = 2 * (x_ifrac - .5) * math.tan(math.radians(CAR_CAM_FOV) / 2) * z_plot
-#             x_pfrac = .5 * (x_plot / X_U + 1)
-#             # print('x: ', x_pfrac)
-#             # assert x_pfrac >= 0, x_pfrac <= 1
-#             x_w = int(x_pfrac * int(IMG_SIZE_X)) - 1
-
-#             # print(x_w, z_w)
-#             replot_img[z_w, x_w] = car_img[z_imax - z_img - 1, x_img]
-
-#     return replot_img
-
 X_REMAP = None
 
 Z_REMAP = None
@@ -321,19 +293,3 @@ _init_remaps()
 def car_img_to_top_down_perspective(car_img):
     car_img[0, 0] = 0
     return cv2.remap(car_img, X_REMAP, Z_REMAP, cv2.INTER_NEAREST)
-
-# def get_img_equality_fraction(t, cam_name, location_candidates):
-#     car_img = image_utils.simple_threshold(
-#         image_utils.get_cv2_from_tel_field(t, cam_name))
-#     car_img_resized = None
-#     car_img_resized_sum = None
-#     for ((x, z), rot_y) in location_candidates:
-#         map_img = get_car_view_img((x, z), rot_y).astype(np.bool)
-#         if car_img_resized is None:
-#             car_img_resized = cv2.resize(car_img, map_img.shape[::-1])
-#             car_img_resized = car_img_resized.astype(np.bool)
-#             car_img_resized_sum = car_img_resized.sum()
-#         cmp_stat = (
-#             (map_img & car_img_resized).sum() 
-#             / max(map_img.sum(), car_img_resized_sum))
-#         yield (((x, z), rot_y), cmp_stat)
