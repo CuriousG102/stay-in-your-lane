@@ -2,64 +2,10 @@ import math
 import numpy as np
 import track_floor_utils
 
-CAR_AXLE_FRONT = track_floor_utils.CAR_SCALE * 1.27
-CAR_AXLE_BACK = track_floor_utils.CAR_SCALE * - 1.6
+CAR_AXLE_FRONT = .127
+CAR_AXLE_BACK = - .16
 
-# def telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, delta_time):
-#     x, z = pos
-#     rot_y = math.radians(rot_y)
-#     s_angle = math.radians(s_angle)
-
-#     d = -CAR_AXLE_BACK + CAR_AXLE_FRONT
-#     initial_front = np.array([
-#         x + math.sin(rot_y) * CAR_AXLE_FRONT, 
-#         z + math.cos(rot_y) * CAR_AXLE_FRONT])
-#     initial_back = np.array([
-#         x + math.sin(rot_y) * CAR_AXLE_BACK, 
-#         z + math.cos(rot_y) * CAR_AXLE_BACK])
-#     v_b_vector = (np.array([math.sin(rot_y), 
-#                             math.cos(rot_y)]) 
-#                   * speed)
-#     v_b = np.sqrt((v_b_vector**2).sum())
-#     final_back = initial_back + v_b_vector * delta_time
-
-
-#     final_front_y = (
-#         np.cos(s_angle)**2 
-#         * (-d+delta_time*v_b
-#            + np.sqrt(d**2 + 
-#                      delta_time * v_b 
-#                      * (2 * d - delta_time * v_b) 
-#                      * math.tan(s_angle)**2)))
-#     final_front_x = final_front_y*math.tan(s_angle)
-
-#     final_front_y_rotated = (
-#         final_front_y * math.cos(rot_y) 
-#         - final_front_x * math.sin(rot_y))
-#     final_front_x_rotated = (
-#         final_front_x * math.cos(rot_y) + final_front_y * math.sin(rot_y))
-
-#     final_front = np.array([final_front_x_rotated, final_front_y_rotated])
-
-#     final_front = final_front + initial_front
-
-#     final_direction = final_front - final_back
-#     change_in_angle = math.atan2(final_direction[0], final_direction[1]) - rot_y
-
-#     fin_rot_y = rot_y + change_in_angle
-
-#     direction = (
-#         (final_front - final_back) 
-#         / np.sqrt(((final_front-final_back)**2).sum()))
-
-#     from_back = abs(CAR_AXLE_BACK) * direction
-
-#     car_pos = final_back + from_back
-
-#     return (tuple(car_pos),
-#             np.rad2deg(fin_rot_y))
-
-def telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, delta_time): # almost works but not well enough..
+def telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, delta_time):
     x, z = pos
     rot_y = math.radians(rot_y)
     s_angle_original = s_angle
@@ -109,24 +55,3 @@ def telemetry_after_delta_time(telemetry, pos, rot_y, delta_time):
     
     return telemetry_after_delta_time_pure(
         telemetry.speed, telemetry.steering, pos, rot_y, delta_time)
-    
-# def break_down_into_times_pure(speed, s_angle, pos, rot_y, delta_time, desired_break_down):
-#     time = delta_time/desired_break_down
-#     for _ in range(desired_break_down):
-#         pos,rot_y = telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, time)
-#         #Produce new telemetry
-#     return pos,rot_y
-
-# def break_down_into_times(telemetry, pos, rot_y, delta_time, desired_break_down):
-#     '''
-#     Just in case the resolution isn't good enough you good do an interpolation.
-#     :param telemetry:
-#     :param pos:
-#     :param rot_y:
-#     :param delta_time:
-#     :param desired_break_down:
-#     :return:
-#     '''
-#     return break_down_into_times_pure(telemetry.speed, telemetry.steering, 
-#         telemetry, pos, rot_y, delta_time, desired_break_down)
-    
