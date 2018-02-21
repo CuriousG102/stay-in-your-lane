@@ -13,6 +13,7 @@ STEERING_ACTION_INCREMENTS = 1
 MOMENTUM_PREFERENCE = 40
 STEERING_PENALTY_EXPONENT = 0.7
 PATH_THICKNESS = 4
+OVERSTEER = 1.1
 
 STEERING_OVERLAY_INDEXING_OFFSET = int(
     MAX_STEERING / STEERING_ACTION_INCREMENTS)
@@ -102,6 +103,14 @@ def get_dilated_top_down_thresholded_img(telemetry):
     thresh_replot_img = image_utils.simple_threshold_ternary(replot_img)
     return cv2.dilate(thresh_replot_img, LINE_DILATION_KERNEL)
 
+def get_dilated_top_down_thresholded_outside_img(telemetry):
+    img = image_utils.get_cv2_from_tel_field(telemetry, 'front_camera_image')
+    replot_img = (
+        track_floor_utils_perspective.car_img_to_top_down_perspective(img))
+    thresh_replot_img = image_utils.simple_threshold_ternary(replot_img)
+    thresh_replot_img[:, :, :2] = 0
+    return cv2.dilate(thresh_replot_img, LINE_DILATION_KERNEL)
+
 def score_s_angle(top_down_thresh, prospective_s_angle, current_s_angle):
     img = (
         top_down_thresh 
@@ -126,11 +135,15 @@ def get_best_s_angle(telemetry):
         MAX_STEERING_TO_ATTEMPT, 
         -MAX_STEERING_TO_ATTEMPT-1, 
         -STEERING_ACTION_INCREMENTS)
-    top_down_thresh = get_dilated_top_down_thresholded_img(telemetry)
+    top_down_thresh = get_dilated_top_down_thresholded_outside_img(telemetry)
     ranking_key = (
         lambda s_angle: score_s_angle(
             top_down_thresh, s_angle, telemetry.steering))
-    return max(s_angles, key=ranking_key)
+    best_scoring_angle = max(s_angles, key=ranking_key)
+    best_angle = min(abs(best_scoring_angle)**OVERSTEER, MAX_STEERING_TO_ATTEMPT)
+    if best_scoring_angle < 0:
+        best_angle *= -1
+    return best_angle
 
 def drive_loop(s, times):
     EVERY_DELTA = 0.12

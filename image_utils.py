@@ -10,7 +10,7 @@ def get_cv2_from_tel_field(tel, field_name):
 def simple_threshold(img):
     b,g,r = (img[:, :, i] for i in range(3))
     bt,gt,rt = (cv2.threshold(color_channel,
-                              120, 255, cv2.THRESH_BINARY)[1]
+                              150, 255, cv2.THRESH_BINARY)[1]
                 for color_channel in (b, g, r))
     return bt | gt | rt
 
@@ -24,7 +24,7 @@ def simple_threshold_sides(img):
     bt,gt,rt = (cv2.threshold(color_channel,
                               120, 255, cv2.THRESH_BINARY)[1]
                 for color_channel in (b, g, r))
-    outside = bt | gt & (~rt)
+    outside = bt | gt | rt
     return ThresholdImages(outside, (bt | gt | rt) & ~outside)
 
 def simple_threshold_ternary(img):

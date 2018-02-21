@@ -8,7 +8,7 @@ CAR_CAM_FOV = 60  # degrees
 # All measurements are in meters.
 CAR_CAM_POS_RELATIVE_Y = .15
 
-CAR_CAM_POS_RELATIVE_Z = .15
+CAR_CAM_POS_RELATIVE_Z = .1905
 
 CAR_HEIGHT = .15
 
@@ -16,10 +16,9 @@ CAR_CAM_HEIGHT = CAR_CAM_POS_RELATIVE_Y + CAR_HEIGHT
 
 CAR_CAM_FORWARD = CAR_CAM_POS_RELATIVE_Z
 
-CAR_CAM_ROTATION_X = 15  # degrees off of level, towards ground
+CAR_CAM_ROTATION_X = 30  # degrees off of level, towards ground
 
-# want to capture .7 of image based on simulated drive
-CAR_IMG_PORTION = .72
+CAR_IMG_PORTION = .95
 
 CAR_CAM_TOP_ANGLE = CAR_CAM_ROTATION_X + CAR_CAM_FOV * (1 / 2 - CAR_IMG_PORTION)
 
