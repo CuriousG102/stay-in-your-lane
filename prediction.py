@@ -1,11 +1,58 @@
+import enum
 import math
+
 import numpy as np
 import track_floor_utils
 
 CAR_AXLE_FRONT = .127
 CAR_AXLE_BACK = - .16
+CAR_LENGTH = abs(CAR_AXLE_BACK) + abs(CAR_AXLE_FRONT)
+
+class Circle:
+    class CircleSide(enum.Enum):
+        LEFT = 1
+        RIGHT = 2
+    def __init__(self, radius, side):
+        self.radius = radius
+        self.side = side
+
+class Line:
+    pass
+
+def telemetry_for_steering_pure(s_angle):
+    '''
+    Returns a relative representation of the car's path if it continues at 
+    a given
+    speed and s_angle indefinitely. This representation can take the form of
+    objects of two different types: Circle and Line. Line simply represents
+    that the car will remain travelling straight. Circle shows that, given 
+    enough time in the current configuration, the car will travel in a circle
+    of radius radius. Side on the circle represents the starting point of the 
+    car. LEFT means that that the first derivative of theta is negative and the
+    car is considered to start at theta=pi. 
+    RIGHT means that the first derivative
+    of theta is positive and the car is considered to start at theta=0. 
+    '''
+    s_angle_original = s_angle
+    s_angle = math.radians(abs(s_angle))
+
+    if abs(s_angle_original) <= 0.1:
+        return Line()
+
+    radius = CAR_LENGTH / math.tan(s_angle)
+    side = (Circle.CircleSide.LEFT 
+            if s_angle_original > 0 
+            else Circle.CircleSide.RIGHT)
+
+    return Circle(radius, side)
 
 def telemetry_after_delta_time_pure(speed, s_angle, pos, rot_y, delta_time):
+    ''' 
+    Returns a single point prediction of where a car will end up in a global coordinate space
+    given speed, steering angle, position, and rotation of the car in that space, after a time 
+    delta_time. The prediction is returned as a tuple containing a tuple and a float:
+    ((predicted_x, predicted_z,), predicted_rot_y,)
+    '''
     x, z = pos
     rot_y = math.radians(rot_y)
     s_angle_original = s_angle
