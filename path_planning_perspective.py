@@ -117,14 +117,14 @@ def score_s_angle(top_down_thresh, prospective_s_angle, current_s_angle):
         + get_overlay_for_steering(prospective_s_angle))
     b, g, r = (img[:, :, i] for i in range(3))
     overlap_sum = (r & b).sum() /255
-    print(prospective_s_angle, current_s_angle, abs(prospective_s_angle - current_s_angle))
+    # print(prospective_s_angle, current_s_angle, abs(prospective_s_angle - current_s_angle))
     momentum_penalty = (
         MOMENTUM_PREFERENCE 
         * min(1, abs(prospective_s_angle - current_s_angle)))
     angle_softener = math.sqrt(abs(prospective_s_angle)+3)
     steering_penalty = abs(prospective_s_angle)**STEERING_PENALTY_EXPONENT
     score = -(((overlap_sum) / angle_softener) + steering_penalty)
-    print('(', overlap_sum, ') / ', angle_softener, ' + ', steering_penalty, ' = ', -score)
+    # print('(', overlap_sum, ') / ', angle_softener, ' + ', steering_penalty, ' = ', -score)
     # score = -(((overlap_sum + momentum_penalty) / angle_softener) + steering_penalty)
     # print('(', overlap_sum, ' + ', momentum_penalty, ') / ', angle_softener, ' + ', steering_penalty, ' = ', -score)
     return score
