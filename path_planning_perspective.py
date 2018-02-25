@@ -1,4 +1,7 @@
+import functools
 import math
+import multiprocessing as mp
+from multiprocessing.pool import Pool
 
 import cv2
 import numpy as np
@@ -23,6 +26,10 @@ LINE_DILATION_KERNEL = np.ones((10, 10))
 IMG_OVER_REAL_RATIO = (
     track_floor_utils_perspective.IMG_SIZE_Z 
     / (track_floor_utils_perspective.Z_U - track_floor_utils_perspective.Z_B))
+
+NUM_WORKERS = 4
+
+worker_pool = None 
 
 STEERING_OVERLAYS = None
 
@@ -91,10 +98,12 @@ def _initialize_steering_overlays():
 
 _initialize_steering_overlays()
 
+def index_for_s_angle(s_angle):
+    return (int(s_angle / STEERING_ACTION_INCREMENTS)
+            + STEERING_OVERLAY_INDEXING_OFFSET)
+
 def get_overlay_for_steering(s_angle):
-    return STEERING_OVERLAYS[
-        int(s_angle / STEERING_ACTION_INCREMENTS)
-        + STEERING_OVERLAY_INDEXING_OFFSET]
+    return STEERING_OVERLAYS[index_for_s_angle(s_angle)]
 
 def get_dilated_top_down_thresholded_img(telemetry):
     img = image_utils.get_cv2_from_tel_field(telemetry, 'front_camera_image')
@@ -111,7 +120,7 @@ def get_dilated_top_down_thresholded_outside_img(telemetry):
     thresh_replot_img[:, :, :2] = 0
     return cv2.dilate(thresh_replot_img, LINE_DILATION_KERNEL)
 
-def score_s_angle(top_down_thresh, prospective_s_angle, current_s_angle):
+def score_s_angle(top_down_thresh, current_s_angle, prospective_s_angle):
     img = (
         top_down_thresh 
         + get_overlay_for_steering(prospective_s_angle))
@@ -129,6 +138,13 @@ def score_s_angle(top_down_thresh, prospective_s_angle, current_s_angle):
     # print('(', overlap_sum, ' + ', momentum_penalty, ') / ', angle_softener, ' + ', steering_penalty, ' = ', -score)
     return score
 
+def get_s_angle_score_pair(
+        top_down_thresh, current_s_angle, prospective_s_angle):
+    return (
+        prospective_s_angle, 
+        score_s_angle(
+            top_down_thresh, current_s_angle, prospective_s_angle))
+
 def get_best_s_angle(telemetry):
     # Should add in relevance decay at some point.
     s_angles = range(
@@ -136,10 +152,14 @@ def get_best_s_angle(telemetry):
         -MAX_STEERING_TO_ATTEMPT-1, 
         -STEERING_ACTION_INCREMENTS)
     top_down_thresh = get_dilated_top_down_thresholded_outside_img(telemetry)
-    ranking_key = (
-        lambda s_angle: score_s_angle(
-            top_down_thresh, s_angle, telemetry.steering))
-    best_scoring_angle = max(s_angles, key=ranking_key)
+
+    get_s_angle_score_pair_partial = functools.partial(
+            get_s_angle_score_pair, top_down_thresh, telemetry.steering)
+
+    # s_angle_scores = worker_pool.imap_unordered(get_s_angle_score_pair_partial, s_angles)
+    # s_angle_scores = worker_pool.map(get_s_angle_score_pair_partial, s_angles)
+    s_angle_scores = map(get_s_angle_score_pair_partial, s_angles)
+    best_scoring_angle = max(s_angle_scores, key=lambda pair: pair[1])[0]
     best_angle = min(abs(best_scoring_angle)**OVERSTEER, MAX_STEERING_TO_ATTEMPT)
     if best_scoring_angle < 0:
         best_angle *= -1
@@ -168,3 +188,5 @@ def drive_loop(s, times):
         current_steering = get_best_s_angle(t)
 
     s.send_instructions(current_steering, THROTTLE)
+
+# worker_pool = mp.pool.Pool(NUM_WORKERS)
