@@ -6,17 +6,17 @@ import numpy as np
 CAR_CAM_FOV = 60  # degrees
 
 # All measurements are in meters.
-CAR_CAM_POS_RELATIVE_Y = .15
+CAR_CAM_POS_RELATIVE_Y = .08255 
 
-CAR_CAM_POS_RELATIVE_Z = .1905
+CAR_CAM_POS_RELATIVE_Z = .07112
 
-CAR_HEIGHT = .15
+CAR_HEIGHT = .10795
 
 CAR_CAM_HEIGHT = CAR_CAM_POS_RELATIVE_Y + CAR_HEIGHT
 
 CAR_CAM_FORWARD = CAR_CAM_POS_RELATIVE_Z
 
-CAR_CAM_ROTATION_X = 30  # degrees off of level, towards ground
+CAR_CAM_ROTATION_X = 15  # degrees off of level, towards ground
 
 CAR_IMG_PORTION = .95
 
@@ -37,7 +37,7 @@ X_OVER_Z_RATIO = (2 * X_U) / (Z_U - Z_B)
 IMG_SIZE_Z = 150
 IMG_SIZE_X = int(X_OVER_Z_RATIO * IMG_SIZE_Z)
 
-CAR_CAM_RESOLUTION = 720
+CAR_CAM_RESOLUTION = 480
 
 X_REMAP = None
 

@@ -2,10 +2,9 @@ import enum
 import math
 
 import numpy as np
-import track_floor_utils
 
-CAR_AXLE_FRONT = .127
-CAR_AXLE_BACK = - .16
+CAR_AXLE_FRONT = .0904875
+CAR_AXLE_BACK = - .0968375
 CAR_LENGTH = abs(CAR_AXLE_BACK) + abs(CAR_AXLE_FRONT)
 
 class Circle:
