@@ -6,7 +6,7 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time
 
-from camera_calibration import get_cv2_maps
+from .camera_calibration import get_cv2_maps
 
 def get_np_buffer_wrapper(raw_arr, resolution, num_channels):
     arr = np.frombuffer(raw_arr, dtype=np.uint8)
@@ -90,3 +90,20 @@ class CorrectedVideoStream:
         self.capture_stream_process.terminate()
         self.undistort_stream_process.terminate()
 
+    def get_latest_undist_image(self):
+        undist_img_cpy_arr = np.ndarray(self.resolution[::-1] + (3,), dtype=np.uint8)
+        undist_img_raw_arr = self.undist_img_arr_wrapper.get_obj()
+        undist_img_arr = get_np_buffer_wrapper(undist_img_raw_arr, self.resolution, 3)
+        with self.undist_img_arr_wrapper.get_lock():
+            np.copyto(undist_img_cpy_arr, undist_img_arr)
+        
+        return undist_img_cpy_arr
+    
+    def get_latest_cam_image(self):
+        cam_img_cpy_arr = np.ndarray(self.resolution[::-1] + (3,), dtype=np.uint8)
+        cam_img_raw_arr = self._cam_img_arr_wrapper.get_obj()
+        cam_img_arr = get_np_buffer_wrapper(cam_img_raw_arr, self.resolution, 4)
+        with self._cam_img_arr_wrapper.get_lock():
+            np.copyto(cam_img_cpy_arr, cam_img_arr[:,:,:3])
+        
+        return cam_img_cpy_arr

@@ -6,7 +6,7 @@ from picamera.array import PiRGBArray
 from picamera.renderers import PiOverlayRenderer
 import time
 
-DEFAULT_CALIBRATION_DIRECTORY = 'calibration_files'
+DEFAULT_CALIBRATION_DIRECTORY = 'calibration_files_fisheye'
 
 def get_calibration_file_path(base_name, calibration_directory, width, height):
     if calibration_directory is None:
@@ -29,6 +29,11 @@ def get_cv2_maps_file_paths(width, height, calibration_directory=None):
             get_calibration_file_path('map_y', *rest_args))
 
 def get_cv2_maps(width, height, calibration_directory=None):
+    CALIBRATION_FLAGS = (
+        cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + 
+        cv2.fisheye.CALIB_CHECK_COND +
+        cv2.fisheye.CALIB_FIX_SKEW)
+
     obj_points = np.load(get_obj_points_file_path(width, height))
     img_points = np.load(get_img_points_file_path(width, height))
     map_x_path, map_y_path = get_cv2_maps_file_paths(
@@ -37,14 +42,27 @@ def get_cv2_maps(width, height, calibration_directory=None):
         return np.load(map_x_path), np.load(map_y_path)
 
     resolution = width, height
-    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-            obj_points, img_points, resolution, None, None)
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
-            mtx, dist, resolution, 1, resolution)
-    map_x, map_y = cv2.initUndistortRectifyMap(
-            mtx, dist, None, newcameramtx, resolution, 5)
+    N_OK = len(obj_points)
+    K = np.zeros((3,3))
+    D = np.zeros((4,1))
+    rvecs = [np.zeros((1,1,3), dtype=np.float64) for i in range(N_OK)]
+    tvecs = [np.zeros((1,1,3), dtype=np.float64) for i in range(N_OK)]
+    rms, _, _, _, _ = cv2.fisheye.calibrate(
+        obj_points,
+        img_points,
+        resolution,
+        K,
+        D,
+        rvecs,
+        tvecs,
+        CALIBRATION_FLAGS,
+        (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
+    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(
+        K, D, np.eye(3), K, resolution, cv2.CV_16SC2)
+    
     np.save(map_x_path, map_x)
     np.save(map_y_path, map_y)
+
     return map_x, map_y
 
 def capture_for_calibration(width, height, calibration_directory=None):
@@ -54,30 +72,36 @@ def capture_for_calibration(width, height, calibration_directory=None):
     raw_capture = PiRGBArray(camera)
     time.sleep(0.1)
     camera.start_preview(alpha=128)
-    obj_points = []
-    img_points = []
-    # width, height
-    BOARD_SIZE = (10, 7)
-    objp = np.zeros((BOARD_SIZE[0]*BOARD_SIZE[1],3), np.float32)
-    objp[:,:2] = np.mgrid[0:BOARD_SIZE[1],0:BOARD_SIZE[0]].T.reshape(-1,2)
-    TERMINATION_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    while 'exit' not in input():
-        with PiRGBArray(camera) as stream:
-            camera.capture(stream, format='bgr')
-            img = stream.array
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            print('Image captured, searching for corners...')
-            ret, corners = cv2.findChessboardCorners(gray, BOARD_SIZE, None)
-            
-            if ret:
-                print('Good shot!: %i samples acquired' % (len(obj_points) + 1))
-                obj_points.append(objp)
-                corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), TERMINATION_CRITERIA)
-                img_points.append(corners2)
-            else:
-                print('Corners not acquired. Try again')
-    camera.stop_preview()
-    camera.close()
+    try:
+        obj_points = []
+        img_points = []
+        # width, height
+        BOARD_SIZE = (6, 9)
+        objp = np.zeros((1, BOARD_SIZE[0]*BOARD_SIZE[1], 3), np.float32)
+        objp[0, :, :2] = np.mgrid[0:BOARD_SIZE[0],0:BOARD_SIZE[1]].T.reshape(-1,2)
+        TERMINATION_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
+        while 'exit' not in input():
+            with PiRGBArray(camera) as stream:
+                camera.capture(stream, format='bgr')
+                img = stream.array
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                print('Image captured, searching for corners...')
+                ret, corners = cv2.findChessboardCorners(
+                        gray, BOARD_SIZE, 
+                        cv2.CALIB_CB_ADAPTIVE_THRESH
+                        + cv2.CALIB_CB_FAST_CHECK 
+                        + cv2.CALIB_CB_NORMALIZE_IMAGE)
+                
+                if ret:
+                    print('Good shot!: %i samples acquired' % (len(obj_points) + 1))
+                    obj_points.append(objp)
+                    cv2.cornerSubPix(gray, corners, (3, 3), (-1, -1), TERMINATION_CRITERIA)
+                    img_points.append(corners)
+                else:
+                    print('Corners not acquired. Try again')
+    finally:
+        camera.stop_preview()
+        camera.close()
     np.save(get_obj_points_file_path(*resolution, calibration_directory), 
             obj_points)
     np.save(get_img_points_file_path(*resolution, calibration_directory), 
