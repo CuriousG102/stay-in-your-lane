@@ -6,7 +6,7 @@ from picamera.array import PiRGBArray
 from picamera.renderers import PiOverlayRenderer
 import time
 
-DEFAULT_CALIBRATION_DIRECTORY = 'calibration_files_fisheye'
+DEFAULT_CALIBRATION_DIRECTORY = 'calibration_files_fisheye2'
 
 def get_calibration_file_path(base_name, calibration_directory, width, height):
     if calibration_directory is None:
@@ -28,7 +28,44 @@ def get_cv2_maps_file_paths(width, height, calibration_directory=None):
     return (get_calibration_file_path('map_x', *rest_args), 
             get_calibration_file_path('map_y', *rest_args))
 
-def get_cv2_maps(width, height, calibration_directory=None):
+#def get_cv2_maps(width, height, calibration_directory=None):
+#    CALIBRATION_FLAGS = (
+#        cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + 
+#        cv2.fisheye.CALIB_CHECK_COND +
+#        cv2.fisheye.CALIB_FIX_SKEW)
+#
+#    obj_points = np.load(get_obj_points_file_path(width, height))
+#    img_points = np.load(get_img_points_file_path(width, height))
+#    map_x_path, map_y_path = get_cv2_maps_file_paths(
+#            width, height, calibration_directory)
+#    if os.path.exists(map_x_path) and os.path.exists(map_y_path):
+#        return np.load(map_x_path), np.load(map_y_path)
+#
+#    resolution = width, height
+#    N_OK = len(obj_points)
+#    K = np.zeros((3,3))
+#    D = np.zeros((4,1))
+#    rvecs = [np.zeros((1,1,3), dtype=np.float64) for i in range(N_OK)]
+#    tvecs = [np.zeros((1,1,3), dtype=np.float64) for i in range(N_OK)]
+#    rms, _, _, _, _ = cv2.fisheye.calibrate(
+#        obj_points,
+#        img_points,
+#        resolution,
+#        K,
+#        D,
+#        rvecs,
+#        tvecs,
+#        CALIBRATION_FLAGS,
+#        (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
+#    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(
+#        K, D, np.eye(3), K, resolution, cv2.CV_16SC2)
+#    
+#    np.save(map_x_path, map_x)
+#    np.save(map_y_path, map_y)
+#
+#    return map_x, map_y
+
+def get_cv2_maps(width, height, output_width, output_height, calibration_directory=None):
     CALIBRATION_FLAGS = (
         cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + 
         cv2.fisheye.CALIB_CHECK_COND +
@@ -36,12 +73,13 @@ def get_cv2_maps(width, height, calibration_directory=None):
 
     obj_points = np.load(get_obj_points_file_path(width, height))
     img_points = np.load(get_img_points_file_path(width, height))
-    map_x_path, map_y_path = get_cv2_maps_file_paths(
-            width, height, calibration_directory)
-    if os.path.exists(map_x_path) and os.path.exists(map_y_path):
-        return np.load(map_x_path), np.load(map_y_path)
-
+#    map_x_path, map_y_path = get_cv2_maps_file_paths(
+#            width, height, calibration_directory)
+#    if os.path.exists(map_x_path) and os.path.exists(map_y_path):
+#        return np.load(map_x_path), np.load(map_y_path)
+    
     resolution = width, height
+    undistort_resolution = output_width, output_height
     N_OK = len(obj_points)
     K = np.zeros((3,3))
     D = np.zeros((4,1))
@@ -57,13 +95,16 @@ def get_cv2_maps(width, height, calibration_directory=None):
         tvecs,
         CALIBRATION_FLAGS,
         (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
-    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(
-        K, D, np.eye(3), K, resolution, cv2.CV_16SC2)
+    new_K = K.copy()
+    new_K[0,0] = new_K[0,0]/2
+    new_K[1,1] = new_K[1,1]/2
+    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), new_K, undistort_resolution, cv2.CV_16SC2)
     
-    np.save(map_x_path, map_x)
-    np.save(map_y_path, map_y)
+#    np.save(map_x_path, map_x)
+#    np.save(map_y_path, map_y)
 
     return map_x, map_y
+    
 
 def capture_for_calibration(width, height, calibration_directory=None):
     camera = PiCamera()

@@ -15,13 +15,13 @@ def get_np_buffer_wrapper(raw_arr, resolution, num_channels):
 
 def undistort_stream_continuous(
         cam_img_arr_wrapper, cam_update_event, undist_img_arr_wrapper,
-        undist_update_event, resolution):
-    mapx, mapy = get_cv2_maps(*resolution)
+        undist_update_event, resolution, undistort_resolution):
+    mapx, mapy = get_cv2_maps(*(resolution+undistort_resolution))
     cam_img_raw_arr = cam_img_arr_wrapper.get_obj()
     cam_img_arr = get_np_buffer_wrapper(cam_img_raw_arr, resolution, 4)
     cam_img_cpy_arr = np.ndarray(resolution[::-1] + (4,), dtype=np.uint8)
     undist_img_raw_arr = undist_img_arr_wrapper.get_obj()
-    undist_img_arr = get_np_buffer_wrapper(undist_img_raw_arr, resolution, 3)
+    undist_img_arr = get_np_buffer_wrapper(undist_img_raw_arr, undistort_resolution, 3)
     while True:
         cam_update_event.wait()
         with cam_img_arr_wrapper.get_lock():
@@ -57,14 +57,19 @@ def capture_stream_continuous(img_arr_wrapper, updated,
             raw_capture.seek(0)
 
 class CorrectedVideoStream:
-    def __init__(self, resolution=(1920, 1200,), framerate=32):
+    def __init__(
+        self, 
+        resolution=(1920, 1088,), 
+        undistort_resolution=(1920, 1088), 
+        framerate=30):
         self._cam_update_event = mp.Event()
         self.new_frame_update_event = mp.Event()
         self._cam_img_arr_wrapper = mp.Array('B', 
                                              resolution[0] * resolution[1] * 4)
         self.undist_img_arr_wrapper = mp.Array(
-                'B', resolution[0] * resolution[1] * 3)
+                'B', undistort_resolution[0] * undistort_resolution[1] * 3)
         self.resolution = resolution
+        self.undistort_resolution = undistort_resolution
         self.framerate = framerate
 
     def _init_processes(self):
@@ -80,7 +85,8 @@ class CorrectedVideoStream:
                 daemon=True,
                 args=(self._cam_img_arr_wrapper, self._cam_update_event,
                       self.undist_img_arr_wrapper, 
-                      self.new_frame_update_event, self.resolution,))
+                      self.new_frame_update_event, self.resolution,
+                      self.undistort_resolution,))
     def start(self):
         self._init_processes()
         self.capture_stream_process.start()
@@ -91,9 +97,9 @@ class CorrectedVideoStream:
         self.undistort_stream_process.terminate()
 
     def get_latest_undist_image(self):
-        undist_img_cpy_arr = np.ndarray(self.resolution[::-1] + (3,), dtype=np.uint8)
+        undist_img_cpy_arr = np.ndarray(self.undistort_resolution[::-1] + (3,), dtype=np.uint8)
         undist_img_raw_arr = self.undist_img_arr_wrapper.get_obj()
-        undist_img_arr = get_np_buffer_wrapper(undist_img_raw_arr, self.resolution, 3)
+        undist_img_arr = get_np_buffer_wrapper(undist_img_raw_arr, self.undistort_resolution, 3)
         with self.undist_img_arr_wrapper.get_lock():
             np.copyto(undist_img_cpy_arr, undist_img_arr)
         
