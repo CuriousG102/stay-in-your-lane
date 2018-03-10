@@ -6,7 +6,7 @@ from picamera.array import PiRGBArray
 from picamera.renderers import PiOverlayRenderer
 import time
 
-DEFAULT_CALIBRATION_DIRECTORY = 'calibration_files_fisheye2'
+DEFAULT_CALIBRATION_DIRECTORY = 'calibration_files_fisheye3'
 
 def get_calibration_file_path(base_name, calibration_directory, width, height):
     if calibration_directory is None:
