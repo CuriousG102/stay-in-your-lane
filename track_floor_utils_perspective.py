@@ -3,7 +3,7 @@ import math
 import cv2
 import numpy as np
 
-CAR_CAM_FOV = 60  # degrees
+CAR_CAM_FOV = 80  # degrees
 
 # All measurements are in meters.
 CAR_CAM_POS_RELATIVE_Y = .08255 
@@ -12,13 +12,16 @@ CAR_CAM_POS_RELATIVE_Z = .07112
 
 CAR_HEIGHT = .10795
 
+# Funny discovery, this really doesn't matter for our transform, because both L_MAX and
+# L_MIN have it in the numerator. Nevertheless left in because it _is_ 
+# used by path_planning_perspective.
 CAR_CAM_HEIGHT = CAR_CAM_POS_RELATIVE_Y + CAR_HEIGHT
 
 CAR_CAM_FORWARD = CAR_CAM_POS_RELATIVE_Z
 
 CAR_CAM_ROTATION_X = 15  # degrees off of level, towards ground
 
-CAR_IMG_PORTION = .95
+CAR_IMG_PORTION = .6
 
 CAR_CAM_TOP_ANGLE = CAR_CAM_ROTATION_X + CAR_CAM_FOV * (1 / 2 - CAR_IMG_PORTION)
 
@@ -34,10 +37,10 @@ Z_B = L_MIN
 
 X_OVER_Z_RATIO = (2 * X_U) / (Z_U - Z_B)
 
-IMG_SIZE_Z = 150
+IMG_SIZE_Z = 600
 IMG_SIZE_X = int(X_OVER_Z_RATIO * IMG_SIZE_Z)
 
-CAR_CAM_RESOLUTION = 480
+CAR_CAM_RESOLUTION = 1088
 
 X_REMAP = None
 
@@ -62,7 +65,7 @@ def _init_remaps():
             x_plot = 2 * (x_ifrac - .5) * math.tan(math.radians(CAR_CAM_FOV) / 2) * z_plot
             x_pfrac = .5 * (x_plot / X_U + 1)
             x_w = int(x_pfrac * int(IMG_SIZE_X)) - 1
-
+            
             X_REMAP[z_w, x_w] = x_img
             Z_REMAP[z_w, x_w] = z_imax - z_img - 1
 
