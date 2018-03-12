@@ -43,3 +43,11 @@ def crop_img_from_below(img, num_rows):
 #                                  'cheater_camera_image')
 #     cv2.imshow('a', image_utils.simple_threshold(img))
 #     cv2.waitKey(1)
+
+SQRT_3 = np.sqrt(3)
+DEGREES_LOWER = np.deg2rad(58)
+DEGREES_UPPER = np.deg2rad(62)
+def threshold_for_yellow(img):
+    b,g,r = (img[:, :, i] for i in range(3))
+    hue = np.arctan2(SQRT_3 * (g - b), 2 * r - g - b)
+    return (hue < DEGREES_UPPER) & (hue > DEGREES_LOWER)

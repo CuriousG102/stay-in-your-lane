@@ -73,8 +73,8 @@ def get_cv2_maps(width, height, output_width, output_height, calibration_directo
 
     obj_points = np.load(get_obj_points_file_path(width, height))
     img_points = np.load(get_img_points_file_path(width, height))
-#    map_x_path, map_y_path = get_cv2_maps_file_paths(
-#            width, height, calibration_directory)
+    map_x_path, map_y_path = get_cv2_maps_file_paths(
+            width, height, calibration_directory)
 #    if os.path.exists(map_x_path) and os.path.exists(map_y_path):
 #        return np.load(map_x_path), np.load(map_y_path)
     
@@ -95,9 +95,13 @@ def get_cv2_maps(width, height, output_width, output_height, calibration_directo
         tvecs,
         CALIBRATION_FLAGS,
         (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
+    print(K)
     new_K = K.copy()
     new_K[0,0] = new_K[0,0]/2
     new_K[1,1] = new_K[1,1]/2
+    new_K[0,2] = width/2
+    new_K[1,2] = height/2
+    print(new_K)
     map_x, map_y = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), new_K, undistort_resolution, cv2.CV_16SC2)
     
 #    np.save(map_x_path, map_x)
