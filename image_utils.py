@@ -47,7 +47,15 @@ def crop_img_from_below(img, num_rows):
 SQRT_3 = np.sqrt(3)
 DEGREES_LOWER = np.deg2rad(58)
 DEGREES_UPPER = np.deg2rad(62)
+DEGREES_LOWER = 26
+DEGREES_UPPER = 34
+BOTTOM_SATURATION = np.array([DEGREES_LOWER, 100, 100])
+TOP_SATURATION = np.array([DEGREES_UPPER, 255, 255])
 def threshold_for_yellow(img):
-    b,g,r = (img[:, :, i] for i in range(3))
-    hue = np.arctan2(SQRT_3 * (g - b), 2 * r - g - b)
-    return (hue < DEGREES_UPPER) & (hue > DEGREES_LOWER)
+    hue = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) 
+    return cv2.inRange(hue, BOTTOM_SATURATION, TOP_SATURATION)
+    #hue = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:,:,0] 
+    #return hue
+    #b,g,r = (img[:, :, i] for i in range(3))
+    #hue = np.arctan2(SQRT_3 * (g - b), 2 * r - g - b)
+    #return (hue <= DEGREES_UPPER) & (hue >= DEGREES_LOWER)

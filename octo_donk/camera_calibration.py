@@ -65,7 +65,7 @@ def get_cv2_maps_file_paths(width, height, calibration_directory=None):
 #
 #    return map_x, map_y
 
-def get_cv2_maps(width, height, output_width, output_height, calibration_directory=None):
+def get_cv2_maps(width, height, output_width, output_height, scale_factor=1, calibration_directory=None):
     CALIBRATION_FLAGS = (
         cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC + 
         cv2.fisheye.CALIB_CHECK_COND +
@@ -79,7 +79,7 @@ def get_cv2_maps(width, height, output_width, output_height, calibration_directo
 #        return np.load(map_x_path), np.load(map_y_path)
     
     resolution = width, height
-    undistort_resolution = output_width, output_height
+    undistort_resolution = output_width // scale_factor, output_height // scale_factor
     N_OK = len(obj_points)
     K = np.zeros((3,3))
     D = np.zeros((4,1))
@@ -96,13 +96,17 @@ def get_cv2_maps(width, height, output_width, output_height, calibration_directo
         CALIBRATION_FLAGS,
         (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6))
     print(K)
-    new_K = K.copy()
+    scaled_K = K.copy()
+    scaled_K /= scale_factor
+    scaled_K[2,2] = 1
+    print(scaled_K)
+    new_K = scaled_K.copy()
     new_K[0,0] = new_K[0,0]/2
     new_K[1,1] = new_K[1,1]/2
-    new_K[0,2] = width/2
-    new_K[1,2] = height/2
+    new_K[0,2] = width // scale_factor / 2
+    new_K[1,2] = height // scale_factor / 2
     print(new_K)
-    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), new_K, undistort_resolution, cv2.CV_16SC2)
+    map_x, map_y = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, undistort_resolution, cv2.CV_16SC2)
     
 #    np.save(map_x_path, map_x)
 #    np.save(map_y_path, map_y)
