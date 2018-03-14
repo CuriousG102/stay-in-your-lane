@@ -69,7 +69,7 @@ class CorrectedVideoStream:
         self, 
         resolution=(1920, 1088,), 
         undistort_resolution=(1920, 1088), 
-        scale_factor=4,
+        scale_factor=2,
         framerate=60):
         self._cam_update_event = mp.Event()
         self.new_frame_update_event = mp.Event()
