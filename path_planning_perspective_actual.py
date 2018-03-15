@@ -13,9 +13,11 @@ import image_utils
 import prediction
 import track_floor_utils_perspective
 
-MAX_STEERING = 16
+# MAX_STEERING = 16
+MAX_STEERING = 14
 STEERING_ACTION_INCREMENTS = 2
 PATH_THICKNESS = 40
+MOMENTUM_PREFERENCE = 450
 
 STEERING_OVERLAY_INDEXING_OFFSET = int(
     MAX_STEERING / STEERING_ACTION_INCREMENTS)
@@ -106,24 +108,28 @@ def get_overlay_for_steering(s_angle):
 def get_dilated_top_down_thresholded_img(undist_image):
     # Hacky and should be controlled by constant
     top_down = track_floor_utils_perspective.car_img_to_top_down_perspective(
-        undist_image[:,208:-208,:])
+        undist_image[:,104:-104,:])
     top_down_thresholded = image_utils.threshold_for_yellow(top_down)
     return cv2.dilate(top_down_thresholded, LINE_DILATION_KERNEL)
 
-def score_s_angle(top_down_thresholded, prospective_s_angle):
+def score_s_angle(top_down_thresholded, previous_s_angle, prospective_s_angle):
     overlap_sum = (
         top_down_thresholded 
         & get_overlay_for_steering(
             prospective_s_angle)).sum()
-    score = overlap_sum
+    score = (
+        overlap_sum 
+        + (MOMENTUM_PREFERENCE 
+           if prospective_s_angle == previous_s_angle 
+           else 0))
     return score
 
-def get_s_angle_score_pair(top_down_thresh, prospective_s_angle):
+def get_s_angle_score_pair(top_down_thresh, previous_s_angle, prospective_s_angle):
     return (
         prospective_s_angle, 
-        score_s_angle(top_down_thresh, prospective_s_angle))
+        score_s_angle(top_down_thresh, previous_s_angle, prospective_s_angle))
 
-def get_best_s_angle(undist_image):
+def get_best_s_angle(undist_image, previous_s_angle):
     s_angles = range(
         MAX_STEERING, 
         -MAX_STEERING - 1, 
@@ -131,15 +137,15 @@ def get_best_s_angle(undist_image):
     top_down_thresholded = get_dilated_top_down_thresholded_img(undist_image)
     
     get_s_angle_score_pair_partial = functools.partial(
-            get_s_angle_score_pair, top_down_thresholded)
+            get_s_angle_score_pair, top_down_thresholded, previous_s_angle)
 
     # s_angle_scores = worker_pool.imap_unordered(get_s_angle_score_pair_partial, s_angles)
     # s_angle_scores = worker_pool.map(get_s_angle_score_pair_partial, s_angles)
     s_angle_scores = map(get_s_angle_score_pair_partial, s_angles)
-    best_scoring_angle = max(s_angle_scores, key=lambda pair: pair[1])[0]
+    best_scoring_angle, score = max(s_angle_scores, key=lambda pair: pair[1])
     best_angle = min(abs(best_scoring_angle), MAX_STEERING)
     if best_scoring_angle < 0:
         best_angle *= -1
-    return best_angle
+    return best_angle, score
 
 # worker_pool = mp.pool.Pool(NUM_WORKERS)
