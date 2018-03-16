@@ -13,8 +13,8 @@ import image_utils
 import prediction
 import track_floor_utils_perspective
 
-# MAX_STEERING = 16
-MAX_STEERING = 14
+MAX_STEERING = 16
+# MAX_STEERING = 14
 STEERING_ACTION_INCREMENTS = 2
 PATH_THICKNESS = 40
 MOMENTUM_PREFERENCE = 450
@@ -108,7 +108,7 @@ def get_overlay_for_steering(s_angle):
 def get_dilated_top_down_thresholded_img(undist_image):
     # Hacky and should be controlled by constant
     top_down = track_floor_utils_perspective.car_img_to_top_down_perspective(
-        undist_image[:,104:-104,:])
+        undist_image[:,208:-208,:])
     top_down_thresholded = image_utils.threshold_for_yellow(top_down)
     return cv2.dilate(top_down_thresholded, LINE_DILATION_KERNEL)
 
