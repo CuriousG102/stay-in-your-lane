@@ -18,7 +18,7 @@ MAX_STEERING = 16
 STEERING_ACTION_INCREMENTS = 4
 PATH_THICKNESS = 40
 MOMENTUM_PREFERENCE = 450
-OUTSIDE_MULTIPLIER = 0.5
+OUTSIDE_MULTIPLIER = 0.1
 
 STEERING_OVERLAY_INDEXING_OFFSET = int(
     MAX_STEERING / STEERING_ACTION_INCREMENTS)
@@ -124,27 +124,33 @@ def get_dilated_top_down_thresholded_img_yellow(top_down_hue):
     return cv2.dilate(top_down_thresholded, LINE_DILATION_KERNEL)
 
 def score_s_angle(
-    top_down_thresholded_yellow, #top_down_thresholded_white, 
+    top_down_thresholded_yellow, top_down_thresholded_white, 
     previous_s_angle, prospective_s_angle):
     steering_overlay = get_overlay_for_steering(prospective_s_angle)
     overlap_sum_yellow = (
         top_down_thresholded_yellow 
         & steering_overlay).sum()
-    #overlap_sum_white = (
-    #    top_down_thresholded_white 
-    #    & steering_overlay).sum()
+    overlap_sum_white = (
+        top_down_thresholded_white 
+        & steering_overlay).sum()
     score = (
         overlap_sum_yellow
-        # - OUTSIDE_MULTIPLIER * overlap_sum_white
+        - OUTSIDE_MULTIPLIER * overlap_sum_white
         + (MOMENTUM_PREFERENCE 
            if prospective_s_angle == previous_s_angle 
            else 0))
     return score
 
-def get_s_angle_score_pair(top_down_thresh, previous_s_angle, prospective_s_angle):
+def get_s_angle_score_pair(
+    top_down_thresholded_yellow, 
+    top_down_thresholded_white, 
+    previous_s_angle, prospective_s_angle):
     return (
         prospective_s_angle, 
-        score_s_angle(top_down_thresh, previous_s_angle, prospective_s_angle))
+        score_s_angle(
+            top_down_thresholded_yellow, 
+            top_down_thresholded_white, 
+            previous_s_angle, prospective_s_angle))
 
 def get_best_s_angle(undist_image, previous_s_angle):
     s_angles = range(
@@ -153,10 +159,13 @@ def get_best_s_angle(undist_image, previous_s_angle):
         -STEERING_ACTION_INCREMENTS)
     top_down_hue = get_top_down_hue(undist_image)
     top_down_thresholded_yellow = get_dilated_top_down_thresholded_img_yellow(top_down_hue)
-    #top_down_thresholded_white = get_dilated_top_down_thresholded_img_white(top_down_hue)
+    top_down_thresholded_white = get_dilated_top_down_thresholded_img_white(top_down_hue)
     
     get_s_angle_score_pair_partial = functools.partial(
-            get_s_angle_score_pair, top_down_thresholded_yellow, previous_s_angle)
+        get_s_angle_score_pair, 
+        top_down_thresholded_yellow,
+        top_down_thresholded_white,
+        previous_s_angle)
 
     # s_angle_scores = worker_pool.imap_unordered(get_s_angle_score_pair_partial, s_angles)
     # s_angle_scores = worker_pool.map(get_s_angle_score_pair_partial, s_angles)

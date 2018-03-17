@@ -55,7 +55,7 @@ def threshold_for_yellow(hue):
     #hue = np.arctan2(SQRT_3 * (g - b), 2 * r - g - b)
     #return (hue <= DEGREES_UPPER) & (hue >= DEGREES_LOWER)
     
-BOTTOM_SATURATION_WHITE = np.array([0, 250, 0])
+BOTTOM_SATURATION_WHITE = np.array([0, 248, 0])
 TOP_SATURATION_WHITE = np.array([179, 255, 255])
 def threshold_for_white(hue):
     return cv2.inRange(
