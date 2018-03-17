@@ -47,8 +47,8 @@ def crop_img_from_below(img, num_rows):
 SQRT_3 = np.sqrt(3)
 DEGREES_LOWER = np.deg2rad(58)
 DEGREES_UPPER = np.deg2rad(62)
-DEGREES_LOWER = 20
-DEGREES_UPPER = 40
+DEGREES_LOWER = 25
+DEGREES_UPPER = 35
 BOTTOM_SATURATION = np.array([DEGREES_LOWER, 20, 20])
 TOP_SATURATION = np.array([DEGREES_UPPER, 255, 255])
 def threshold_for_yellow(img):
