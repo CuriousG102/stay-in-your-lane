@@ -44,18 +44,19 @@ def crop_img_from_below(img, num_rows):
 #     cv2.imshow('a', image_utils.simple_threshold(img))
 #     cv2.waitKey(1)
 
-SQRT_3 = np.sqrt(3)
-DEGREES_LOWER = np.deg2rad(58)
-DEGREES_UPPER = np.deg2rad(62)
-DEGREES_LOWER = 20
-DEGREES_UPPER = 40
-BOTTOM_SATURATION = np.array([DEGREES_LOWER, 50, 20])
-TOP_SATURATION = np.array([DEGREES_UPPER, 255, 255])
-def threshold_for_yellow(img):
-    hue = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) 
-    return cv2.inRange(hue, BOTTOM_SATURATION, TOP_SATURATION)
+BOTTOM_SATURATION_YELLOW = np.array([20, 20, 20])
+TOP_SATURATION_YELLOW = np.array([40, 255, 255])
+def threshold_for_yellow(hue):
+    return cv2.inRange(
+        hue, BOTTOM_SATURATION_YELLOW, TOP_SATURATION_YELLOW)
     #hue = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:,:,0] 
     #return hue
     #b,g,r = (img[:, :, i] for i in range(3))
     #hue = np.arctan2(SQRT_3 * (g - b), 2 * r - g - b)
     #return (hue <= DEGREES_UPPER) & (hue >= DEGREES_LOWER)
+    
+BOTTOM_SATURATION_WHITE = np.array([0, 250, 0])
+TOP_SATURATION_WHITE = np.array([179, 255, 255])
+def threshold_for_white(hue):
+    return cv2.inRange(
+        hue, BOTTOM_SATURATION_WHITE, TOP_SATURATION_WHITE)
