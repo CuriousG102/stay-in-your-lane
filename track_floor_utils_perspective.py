@@ -19,7 +19,7 @@ CAR_CAM_HEIGHT = CAR_CAM_POS_RELATIVE_Y + CAR_HEIGHT
 
 CAR_CAM_FORWARD = CAR_CAM_POS_RELATIVE_Z
 
-CAR_CAM_ROTATION_X = 15  # degrees off of level, towards ground
+CAR_CAM_ROTATION_X = 13  # degrees off of level, towards ground
 
 CAR_IMG_PORTION = .6
 
