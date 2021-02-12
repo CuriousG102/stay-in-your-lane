@@ -38,7 +38,7 @@ CAM_VIEW_BOX_SIDE_SIZE = (         # Global scale, be careful to note that
     2 * CAR_SCALE * CAR_CAM_POS_RELATIVE[1] 
     * math.tan(math.radians(CAR_CAM_FOV / 2))) 
 
-CORNER_DIST_FROM_CAM_CENTER = math.sqrt(2*(CAM_VIEW_BOX_SIDE_SIZE/2)**2)
+CORNER_DIST_FROM_CAM_CENTER = math.sqrt(2 * (CAM_VIEW_BOX_SIDE_SIZE / 2)**2)
 
 # convert to global scale
 CAM_DIST_FROM_CAR = CAR_SCALE * CAR_CAM_POS_RELATIVE[2] 
@@ -69,9 +69,11 @@ def pos_in_track(position):
         int(i) 
         for i in img_point_bottom_left_to_top_left(
             unity_plane_point_to_img_point(position)))[::-1]
-    track_shape = TRACK_FLOOR_FILLED.shape
-    if (top_left_point[0] >= track_shape[0] 
-        or top_left_point[1] >= track_shape[1]):
+    top_left_point_x, top_left_point_z = top_left_point
+    track_shape_height, track_shape_width = TRACK_FLOOR_FILLED.shape
+    if (top_left_point_x < 0 or top_left_point_z < 0
+        or top_left_point_x >= track_shape_width  
+        or top_left_point_y >= track_shape_height):
         return False
     return TRACK_FLOOR_FILLED[top_left_point]
 
